@@ -1,1 +1,156 @@
 
+// C3
+CONTEXT
+		C3 	›
+	EXTENDS
+	⚬	 C0 
+	SETS
+	⚬	ETAT_RESERVATION	 ›
+	⚬	PONT	 ›
+	CONSTANTS
+	⚬	valide	 ›
+	⚬	invalide	 ›
+	⚬	pont1	 ›
+	⚬	pont2	 ›
+	⚬	pont3	 ›
+	⚬	reservation	 ›
+	⚬	pont_cible	 ›
+	AXIOMS
+	⚬	axm1:	valide ∈ ETAT_RESERVATION not theorem ›
+	⚬	axm2:	invalide ∈ ETAT_RESERVATION not theorem ›
+	⚬	axm3:	valide  ≠ invalide  not theorem ›
+	⚬	axm4:	ETAT_RESERVATION = {valide,invalide} not theorem ›
+	⚬	axm5:	pont1 ∈ PONT not theorem ›
+	⚬	axm6:	pont2 ∈ PONT not theorem ›
+	⚬	axm7:	pont3 ∈ PONT not theorem ›
+	⚬	axm8:	PONT = {pont1, pont2, pont3} not theorem ›
+	⚬	axm9:	reservation ∈ VEHICULE →ETAT_RESERVATION  not theorem ›
+	⚬	axm10:	pont_cible ∈ VEHICULE → PONT not theorem ›
+	⚬	axm11:	∀ f, x, y · f ∈ VEHICULE ⇸ ETAT_RESERVATION ∧ x ∈ VEHICULE ∧ y ∈ ETAT_RESERVATION ⇒ f ∪ {x ↦ y} ∈ VEHICULE ⇸ ETAT_RESERVATION not theorem ›
+
+// M3 
+	MACHINE
+		M3 	›
+	REFINES
+	⚬	 M0 
+	SEES
+	⚬	 C3 
+	VARIABLES
+	⚬	places_pont1	 ›
+	⚬	places_pont2	 ›
+	⚬	places_pont3	 ›
+	⚬	type_vehicule_actif	 ›
+	⚬	permission_envoyee	 ›
+	INVARIANTS
+	⚬	inv1:	places_pont1 ∈ ℤ  not theorem ›
+	⚬	inv2:	places_pont2 ∈ ℤ not theorem ›
+	⚬	inv3:	places_pont3 ∈ ℤ not theorem ›
+	⚬	inv4:	type_vehicule_actif ∈ TYPE_VEHICULE not theorem ›
+	⚬	inv5:	permission_envoyee ∈ BOOL not theorem ›
+	EVENTS
+	⚬	INITIALISATION:	 not extended ordinary ›
+		THEN
+		⚬	act1:	places_pont1 ≔ 0 ›
+		⚬	act2:	places_pont2 ≔ 0 ›
+		⚬	act3:	places_pont3 ≔ 0 ›
+		⚬	act4:	permission_envoyee ≔ FALSE ›
+		⚬	act6:	type_vehicule_actif ≔ voiture  ›
+		END
+
+	⚬	verification_reservation:	 not extended ordinary ›
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ VEHICULE not theorem ›
+		⚬	grd2:	v ∈ dom(reservation) not theorem ›
+		⚬	grd3:	reservation(v) = valide not theorem ›
+		⚬	grd4:	permission_envoyee = FALSE not theorem ›
+		THEN
+		⚬	act1:	permission_envoyee ≔ TRUE ›
+		END
+
+	⚬	acceptation_vehicule:	 not extended ordinary ›
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ VEHICULE not theorem ›
+		⚬	grd2:	v ∈ dom(reservation) not theorem ›
+		⚬	grd3:	reservation(v) = valide not theorem ›
+		⚬	grd4:	permission_envoyee = TRUE not theorem ›
+		THEN
+		⚬	act2:	permission_envoyee ≔ FALSE ›
+		END
+
+	⚬	rejet_vehicule:	 not extended ordinary ›
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ VEHICULE not theorem ›
+		⚬	grd2:	v ∈ dom(reservation) not theorem ›
+		⚬	grd3:	reservation(v) = invalide not theorem ›
+		END
+
+	⚬	envoi_permission:	 not extended ordinary ›
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ VEHICULE not theorem ›
+		⚬	grd2:	v ∈ dom(reservation) not theorem ›
+		⚬	grd3:	reservation(v)= valide not theorem ›
+		⚬	grd4:	permission_envoyee = TRUE not theorem ›
+		THEN
+		⚬	act1:	permission_envoyee ≔ TRUE ›
+		END
+
+	⚬	redirection_camion:	 not extended ordinary ›
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ VEHICULE not theorem ›
+		⚬	grd2:	v ∈ dom(reservation) not theorem ›
+		⚬	grd3:	reservation(v) = valide not theorem ›
+		⚬	grd4:	v ∈ dom(pont_cible) not theorem ›
+		⚬	grd5:	pont_cible(v) = pont1 not theorem ›
+		⚬	grd6:	places_pont1 = N not theorem ›
+		END
+
+	⚬	monter_pont1:	 extended ordinary ›
+		REFINES
+		⚬	 monter_pont1 
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ TYPE_VEHICULE not theorem ›
+		⚬	grd2:	places_pont1 + taille(v) ≤ N not theorem ›
+		⚬	grd3:	taille(v) > 0 not theorem ›
+		THEN
+		⚬	act1:	places_pont1 ≔ places_pont1 + taille(v) ›
+		END
+
+	⚬	monter_pont2:	 extended ordinary ›
+		REFINES
+		⚬	 monter_pont2 
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ TYPE_VEHICULE not theorem ›
+		⚬	grd2:	places_pont1 = N not theorem ›
+		⚬	grd3:	places_pont2 + taille(v) ≤ N not theorem ›
+		⚬	grd4:	taille(v) > 0 not theorem ›
+		THEN
+		⚬	act1:	places_pont2 ≔ places_pont2 + taille(v) ›
+		END
+
+	⚬	monter_pont3:	 extended ordinary ›
+		REFINES
+		⚬	 monter_pont3 
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ TYPE_VEHICULE not theorem ›
+		⚬	grd2:	places_pont2 = N not theorem ›
+		⚬	grd3:	places_pont3 + taille(v) ≤ N not theorem ›
+		⚬	grd4:	taille(v) > 0 not theorem ›
+		THEN
+		⚬	act1:	places_pont3 ≔ places_pont3 + taille(v) ›
+		END
