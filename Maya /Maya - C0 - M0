@@ -1,1 +1,83 @@
 
+// c0
+CONTEXT
+		C0 	›
+	SETS
+	⚬	VEHICULE	 ›
+	⚬	TYPE_VEHICULE	 ›
+	CONSTANTS
+	⚬	voiture	 ›
+	⚬	camion1	 ›
+	⚬	camion2	 ›
+	⚬	camion3	 ›
+	⚬	N	 ›
+	⚬	taille	 ›
+	AXIOMS
+	⚬	axm1:	N = 20 not theorem ›
+	⚬	axm2:	N ∈ ℕ1  not theorem ›
+	⚬	axm3:	voiture ∈ TYPE_VEHICULE not theorem ›
+	⚬	axm4:	camion1 ∈ TYPE_VEHICULE not theorem ›
+	⚬	axm5:	camion2 ∈ TYPE_VEHICULE not theorem ›
+	⚬	axm6:	camion3 ∈ TYPE_VEHICULE not theorem ›
+	⚬	axm7:	taille ∈ TYPE_VEHICULE → ℕ1 not theorem ›
+	⚬	axm8:	taille(voiture) = 1 not theorem ›
+	⚬	axm9:	taille(camion1) = 1 not theorem ›
+	⚬	axm10:	taille(camion2) = 2 not theorem ›
+	⚬	axm11:	taille(camion3) = 3 not theorem ›
+	⚬	axm12:	∀ v · v ∈ TYPE_VEHICULE ⇒ taille(v) > 0 not theorem ›
+
+// M0
+MACHINE
+		M0 	›
+	SEES
+	⚬	 C0 
+	VARIABLES
+	⚬	places_pont1	 ›
+	⚬	places_pont2	 ›
+	⚬	places_pont3	 ›
+	INVARIANTS
+	⚬	inv1:	places_pont1 ∈ ℤ theorem ›
+	⚬	inv2:	places_pont2 ∈ ℤ not theorem ›
+	⚬	inv3:	places_pont3 ∈ ℤ not theorem ›
+	EVENTS
+	⚬	INITIALISATION:	 not extended ordinary ›
+		THEN
+		⚬	act1:	places_pont1 ≔ 0 ›
+		⚬	act2:	places_pont2 ≔ 0 ›
+		⚬	act3:	places_pont3 ≔ 0 ›
+		END
+
+	⚬	monter_pont1:	 not extended ordinary ›
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ TYPE_VEHICULE not theorem ›
+		⚬	grd2:	places_pont1 + taille(v) ≤ N not theorem ›
+		⚬	grd3:	taille(v) > 0 not theorem ›
+		THEN
+		⚬	act1:	places_pont1 ≔ places_pont1 + taille(v) ›
+		END
+
+	⚬	monter_pont2:	 not extended ordinary ›
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ TYPE_VEHICULE not theorem ›
+		⚬	grd2:	places_pont1 = N not theorem ›
+		⚬	grd3:	places_pont2 + taille(v) ≤ N not theorem ›
+		⚬	grd4:	taille(v) > 0 not theorem ›
+		THEN
+		⚬	act1:	places_pont2 ≔ places_pont2 + taille(v) ›
+		END
+
+	⚬	monter_pont3:	 not extended ordinary ›
+		ANY
+		⚬	v	 ›
+		WHERE
+		⚬	grd1:	v ∈ TYPE_VEHICULE not theorem ›
+		⚬	grd2:	places_pont2 = N not theorem ›
+		⚬	grd3:	places_pont3 + taille(v) ≤ N not theorem ›
+		⚬	grd4:	taille(v) > 0 not theorem ›
+		THEN
+		⚬	act1:	places_pont3 ≔ places_pont3 + taille(v) ›
+		END
