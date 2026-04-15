@@ -1,1 +1,145 @@
+/* pas de contexte */
+machine M1
+refines M0
+sees c0
 
+variables
+	places_pont1
+	places_pont2
+	places_pont3
+	niveau_mc
+	etat_mc
+	places_mc
+
+invariants
+	@inv1	places_pont1 ∈ ℤ
+	@inv2	places_pont2 ∈ ℤ
+	@inv3	places_pont3 ∈ ℤ
+	@inv4	niveau_mc ∈ {0, 1, 2}
+	@inv5	etat_mc ∈ BOOL
+	@inv6	places_mc ∈ ℤ
+	@inv7	places_mc ≥ 0
+	@inv8	places_mc ≤ 6
+	@inv9	places_pont1 ≥ 0
+	@inv10	places_pont1 ≤ N
+	@inv11	places_pont2 ≥ 0
+	@inv12	places_pont2 ≤ N
+	@inv13	places_pont3 ≥ 0
+	@inv14	places_pont3 ≤ N
+
+events
+
+ event INITIALISATION
+	then
+		@act1	places_pont1 ≔ 0
+		@act2	places_pont2 ≔ 0
+		@act3	places_pont3 ≔ 0
+		@act4	niveau_mc ≔ 0
+		@act5	etat_mc ≔ FALSE
+		@act6	places_mc ≔ 0
+ end
+
+ event deplacement_vers_pont2
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 1
+		@grd3	places_mc > 0
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 1
+ end
+
+ event deplacement_vers_pont3
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 2
+		@grd3	places_mc > 0
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 2
+ end
+
+ event deplacement_vers_pont1
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 0
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 0
+ end
+
+ event arret_monte_charge
+	where
+		@grd1	etat_mc = TRUE
+	then
+		@act1	etat_mc ≔ FALSE
+ end
+
+ event charger_mc
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 0
+		@grd4	places_mc + taille(v) ≤ 6
+	then
+		@act1	places_mc ≔ places_mc + taille(v)
+ end
+
+ event monter_pont1
+	refines monter_pont1
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont1 + taille(v) ≤ N
+		@grd6	places_mc − taille(v) ≥ 0
+		@grd7	places_mc − taille(v) ≤ 6
+		@grd8	taille(v) > 0
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont1 ≔ places_pont1 + taille(v)
+ end
+
+ event monter_pont2
+	refines monter_pont2
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 1
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont1 = N
+		@grd6	places_pont2 + taille(v) ≤ N
+		@grd7	places_mc − taille(v) ≥ 0
+		@grd8	places_mc − taille(v) ≤ 6
+		@grd9	taille(v) > 0
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont2 ≔ places_pont2 + taille(v)
+ end
+
+ event monter_pont3
+	refines monter_pont3
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 2
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont2 = N
+		@grd6	places_pont3 + taille(v) ≤ N
+		@grd7	places_mc − taille(v) ≥ 0
+		@grd8	places_mc − taille(v) ≤ 6
+		@grd9	taille(v) > 0
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont3 ≔ places_pont3 + taille(v)
+ end
+
+end
