@@ -1,1 +1,260 @@
+/* pas de context */
+machine M4
+refines M1
+sees c0
 
+variables
+	places_pont1
+	places_pont2
+	places_pont3
+	niveau_mc
+	etat_mc
+	places_mc
+	barr_file1
+	barr_file2
+	barr_mc_entree
+	barr_mc_sortie
+
+invariants
+	@inv1	places_pont1 ∈ ℤ
+	@inv2	places_pont2 ∈ ℤ
+	@inv3	places_pont3 ∈ ℤ
+	@inv4	niveau_mc ∈ {0, 1, 2}
+	@inv5	etat_mc ∈ BOOL
+	@inv6	places_mc ∈ ℤ
+	@inv7	places_mc ≥ 0
+	@inv8	places_mc ≤ 6
+	@inv9	places_pont1 ≥ 0
+	@inv10	places_pont1 ≤ N
+	@inv11	places_pont2 ≥ 0
+	@inv12	places_pont2 ≤ N
+	@inv13	places_pont3 ≥ 0
+	@inv14	places_pont3 ≤ N
+	@inv15	barr_file1 ∈ BOOL
+	@inv16	barr_file2 ∈ BOOL
+	@inv17	barr_mc_entree ∈ BOOL
+	@inv18	barr_mc_sortie ∈ BOOL
+
+	/* Invariants de sécurité */
+	@inv19	etat_mc = TRUE ⇒ barr_file1 = FALSE
+	@inv20	etat_mc = TRUE ⇒ barr_file2 = FALSE
+	@inv21	etat_mc = TRUE ⇒ barr_mc_entree = FALSE
+	@inv22	etat_mc = TRUE ⇒ barr_mc_sortie = FALSE
+	@inv23	barr_mc_entree = TRUE ⇒ etat_mc = FALSE
+	@inv24	barr_mc_sortie = TRUE ⇒ etat_mc = FALSE
+
+events
+
+ event INITIALISATION
+	then
+		@act1	places_pont1 ≔ 0
+		@act2	places_pont2 ≔ 0
+		@act3	places_pont3 ≔ 0
+		@act4	niveau_mc ≔ 0
+		@act5	etat_mc ≔ FALSE
+		@act6	places_mc ≔ 0
+		@act7	barr_file1 ≔ FALSE
+		@act8	barr_file2 ≔ FALSE
+		@act9	barr_mc_entree ≔ FALSE
+		@act10	barr_mc_sortie ≔ FALSE
+ end
+
+ event deplacement_vers_pont2
+	refines deplacement_vers_pont2
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 1
+		@grd3	places_mc > 0
+		@grd4	barr_file1 = FALSE
+		@grd5	barr_file2 = FALSE
+		@grd6	barr_mc_entree = FALSE
+		@grd7	barr_mc_sortie = FALSE
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 1
+ end
+
+ event deplacement_vers_pont3
+	refines deplacement_vers_pont3
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 2
+		@grd3	places_mc > 0
+		@grd4	barr_file1 = FALSE
+		@grd5	barr_file2 = FALSE
+		@grd6	barr_mc_entree = FALSE
+		@grd7	barr_mc_sortie = FALSE
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 2
+ end
+
+ event deplacement_vers_pont1
+	refines deplacement_vers_pont1
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 0
+		@grd3	barr_file1 = FALSE
+		@grd4	barr_file2 = FALSE
+		@grd5	barr_mc_entree = FALSE
+		@grd6	barr_mc_sortie = FALSE
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 0
+ end
+
+ event arret_monte_charge
+	refines arret_monte_charge
+	where
+		@grd1	etat_mc = TRUE
+	then
+		@act1	etat_mc ≔ FALSE
+ end
+
+ event ouverture_barr_file1
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc = 0
+		@grd3	barr_file1 = FALSE
+		@grd4	barr_mc_entree = FALSE
+		@grd5	barr_mc_sortie = FALSE
+		@grd6	places_mc < 6
+	then
+		@act1	barr_file1 ≔ TRUE
+ end
+
+ event fermeture_barr_file1
+	where
+		@grd1	barr_file1 = TRUE
+	then
+		@act1	barr_file1 ≔ FALSE
+ end
+
+ event ouverture_barr_file2
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc = 0
+		@grd3	barr_file2 = FALSE
+		@grd4	barr_mc_entree = FALSE
+		@grd5	barr_mc_sortie = FALSE
+		@grd6	places_mc < 6
+	then
+		@act1	barr_file2 ≔ TRUE
+ end
+
+ event fermeture_barr_file2
+	where
+		@grd1	barr_file2 = TRUE
+	then
+		@act1	barr_file2 ≔ FALSE
+ end
+
+ event ouverture_barr_mc_entree
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc = 0
+		@grd3	barr_mc_entree = FALSE
+		@grd4	barr_file1 = FALSE
+		@grd5	barr_file2 = FALSE
+	then
+		@act1	barr_mc_entree ≔ TRUE
+ end
+
+ event fermeture_barr_mc_entree
+	where
+		@grd1	barr_mc_entree = TRUE
+	then
+		@act1	barr_mc_entree ≔ FALSE
+ end
+
+ event ouverture_barr_mc_sortie
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	barr_mc_sortie = FALSE
+		@grd3	barr_file1 = FALSE
+		@grd4	barr_file2 = FALSE
+		@grd5	places_mc > 0
+	then
+		@act1	barr_mc_sortie ≔ TRUE
+ end
+
+ event fermeture_barr_mc_sortie
+	where
+		@grd1	barr_mc_sortie = TRUE
+	then
+		@act1	barr_mc_sortie ≔ FALSE
+ end
+
+ event charger_mc
+	refines charger_mc
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 0
+		@grd4	places_mc + taille(v) ≤ 6
+		@grd5	barr_mc_entree = TRUE
+	then
+		@act1	places_mc ≔ places_mc + taille(v)
+ end
+
+ event monter_pont1
+	refines monter_pont1
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont1 + taille(v) ≤ N
+		@grd6	places_mc − taille(v) ≥ 0
+		@grd7	places_mc − taille(v) ≤ 6
+		@grd8	taille(v) > 0
+		@grd9	barr_mc_sortie = TRUE
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont1 ≔ places_pont1 + taille(v)
+ end
+
+ event monter_pont2
+	refines monter_pont2
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 1
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont1 = N
+		@grd6	places_pont2 + taille(v) ≤ N
+		@grd7	places_mc − taille(v) ≥ 0
+		@grd8	places_mc − taille(v) ≤ 6
+		@grd9	taille(v) > 0
+		@grd10	barr_mc_sortie = TRUE
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont2 ≔ places_pont2 + taille(v)
+ end
+
+ event monter_pont3
+	refines monter_pont3
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 2
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont2 = N
+		@grd6	places_pont3 + taille(v) ≤ N
+		@grd7	places_mc − taille(v) ≥ 0
+		@grd8	places_mc − taille(v) ≤ 6
+		@grd9	taille(v) > 0
+		@grd10	barr_mc_sortie = TRUE
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont3 ≔ places_pont3 + taille(v)
+ end
+
+end
