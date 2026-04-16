@@ -31,7 +31,7 @@ M0 modélise l'embarquement des véhicules sur les trois ponts du ferry. Trois v
 
 Cette priorité respecte l'énoncé : le pont 1 est rempli en premier, puis le pont 2, puis le pont 3.
 
-**Proof obligations :** Toutes les POs sont prouvées automatiquement ✅.
+**Proof obligations :** Toutes les POs sont prouvées automatiquement.
 
 ---
 
