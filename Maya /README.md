@@ -1,4 +1,4 @@
-// explication M0/C0
+
 ## Rapport — C0 et M0 (16 avril 2026)
 
 ---
