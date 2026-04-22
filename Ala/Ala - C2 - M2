@@ -1,1 +1,52 @@
+CONTEXT
+  cont
 
+SETS
+  PONT
+  VEHICULE
+  TYPE_VEHICULE
+  ETAT_MC
+  ETAT_BARRIERE
+  ETAT_RESERVATION
+
+CONSTANTS
+  pont_1        not symbolic
+  pont_2        not symbolic
+  pont_3        not symbolic
+  voiture       not symbolic
+  camion1       not symbolic
+  camion2       not symbolic
+  camion3       symbolic
+  arret         not symbolic
+  mouvement     not symbolic
+  levee         not symbolic
+  abaissee      not symbolic
+  valide        not symbolic
+  non_valide    not symbolic
+  N             not symbolic
+  taille        not symbolic
+  type_vehicule not symbolic
+  pont_sible    not symbolic
+  reserv_vehicule not symbolic
+
+AXIOMS
+  axm1: partition(PONT,{pont_1},{pont_2},{pont_3}) not theorem
+  axm2: pont_1 ≠ pont_2 ∧ pont_1 ≠ pont_3 ∧ pont_2 ≠ pont_3 not theorem
+  axm3: partition(TYPE_VEHICULE,{voiture},{camion1},{camion2},{camion3}) not theorem
+  axm4: voiture ≠ camion1 ∧ voiture ≠ camion2 ∧ voiture ≠ camion3 ∧ camion1 ≠ camion2 ∧ camion1 ≠ camion3 ∧ camion2 ≠ camion3 not theorem
+  axm5: partition(ETAT_MC,{arret},{mouvement}) not theorem
+  axm6: arret ≠ mouvement not theorem
+  axm7: partition(ETAT_BARRIERE,{levee},{abaissee}) not theorem
+  axm8: levee ≠ abaissee not theorem
+  axm9: partition(ETAT_RESERVATION,{valide},{non_valide}) not theorem
+  axm10: valide ≠ non_valide not theorem
+  axm11: N = 20 not theorem
+  axm12: N ≥ 1 theorem
+  axm13: taille ∈ ℕ1 not theorem
+  axm14: taille(voiture) = 1 ∧ taille(camion1) = 1 ∧ taille(camion2) = 2 ∧ taille(camion3) = 3 theorem
+  axm15: type_vehicule ∈ VEHICULE → TYPE_VEHICULE not theorem
+  axm16: pont_sible ∈ VEHICULE → PONT not theorem
+  axm17: reserv_vehicule ∈ VEHICULE → ETAT_RESERVATION not theorem
+  axm18: ∀ v·v ∈ VEHICULE ∧ type_vehicule(v) ≠ voiture ⇒ pont_sible(v) = pont_1 not theorem
+
+END
