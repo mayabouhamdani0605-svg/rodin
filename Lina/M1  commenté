@@ -1,0 +1,187 @@
+/* =========================================================
+   MACHINE M1 — Déplacement du monte-charge
+   Raffine : M0
+   Voit    : c0
+   Rôle    : Introduit le monte-charge (niveau, état, places)
+             et précise que les véhicules passent par la
+             plateforme avant d'atteindre un pont.
+   ========================================================= */
+machine M1
+refines M0
+sees c0
+
+variables
+	places_pont1    /* nb de places occupées sur le pont 1 */
+	places_pont2    /* nb de places occupées sur le pont 2 */
+	places_pont3    /* nb de places occupées sur le pont 3 */
+	niveau_mc       /* position du MC : 0=pont1, 1=pont2, 2=pont3 */
+	etat_mc         /* TRUE=en mouvement, FALSE=à l'arrêt */
+	places_mc       /* nb de places occupées sur la plateforme (max 6) */
+
+invariants
+	/* Typage des variables des ponts */
+	@inv1	places_pont1 ∈ ℤ
+	@inv2	places_pont2 ∈ ℤ
+	@inv3	places_pont3 ∈ ℤ
+
+	/* Typage des variables du monte-charge */
+	@inv4	niveau_mc ∈ {0, 1, 2}    /* le MC ne peut être qu'à 3 niveaux */
+	@inv5	etat_mc ∈ BOOL
+	@inv6	places_mc ∈ ℤ
+
+	/* Bornes de la plateforme */
+	@inv7	places_mc ≥ 0            /* la plateforme ne peut pas être négative */
+	@inv8	places_mc ≤ 6            /* capacité max de la plateforme */
+
+	/* Bornes des ponts (capacité N=20) */
+	@inv9	places_pont1 ≥ 0
+	@inv10	places_pont1 ≤ N
+	@inv11	places_pont2 ≥ 0
+	@inv12	places_pont2 ≤ N
+	@inv13	places_pont3 ≥ 0
+	@inv14	places_pont3 ≤ N
+
+events
+
+	/* Initialisation : tout à zéro, MC à l'arrêt au niveau 0 */
+	event INITIALISATION
+		then
+			@act1	places_pont1 ≔ 0
+			@act2	places_pont2 ≔ 0
+			@act3	places_pont3 ≔ 0
+			@act4	niveau_mc ≔ 0       /* MC au niveau du pont 1 au départ */
+			@act5	etat_mc ≔ FALSE     /* MC à l'arrêt au départ */
+			@act6	places_mc ≔ 0       /* plateforme vide au départ */
+	end
+
+	/*  Le MC se déplace vers le pont 2 (niveau 1) ;
+	   Conditions : à l'arrêt, pas déjà au niveau 1,
+	   et au moins un véhicule sur la plateforme          */
+	event deplacement_vers_pont2
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc ≠ 1
+			@grd3	places_mc > 0       /* inutile de déplacer une plateforme vide */
+		then
+			@act1	etat_mc ≔ TRUE
+			@act2	niveau_mc ≔ 1
+	end
+
+	/*  Le MC se déplace vers le pont 3 (niveau 2) ;
+	   Même logique que vers pont 2                       */
+	event deplacement_vers_pont3
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc ≠ 2
+			@grd3	places_mc > 0
+		then
+			@act1	etat_mc ≔ TRUE
+			@act2	niveau_mc ≔ 2
+	end
+
+	/* Le MC redescend au niveau 0 (entrée / pont 1) ;
+	   Pas besoin de véhicules sur la plateforme :
+	   il redescend aussi pour aller chercher de nouveaux
+	   véhicules dans les files d'attente                 */
+	event deplacement_vers_pont1
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc ≠ 0
+		then
+			@act1	etat_mc ≔ TRUE
+			@act2	niveau_mc ≔ 0
+	end
+
+	/* Le MC s'arrête une fois arrivé à destination ;
+	   Dans M1 l'arrêt est instantané et non conditionné
+	   par l'alignement exact (ce sera précisé dans M4
+	   avec les barrières)                               */
+	event arret_monte_charge
+		where
+			@grd1	etat_mc = TRUE
+		then
+			@act1	etat_mc ≔ FALSE
+	end
+
+	/* Chargement d'un véhicule sur la plateforme ;
+	   Le MC doit être à l'arrêt au niveau 0
+	   et il doit rester assez de place sur la plateforme */
+	event charger_mc
+		any
+			v
+		where
+			@grd1	v ∈ TYPE_VEHICULE
+			@grd2	etat_mc = FALSE
+			@grd3	niveau_mc = 0       /* chargement uniquement au niveau de l'entrée */
+			@grd4	places_mc + taille(v) ≤ 6
+		then
+			@act1	places_mc ≔ places_mc + taille(v)
+	end
+
+	/* Déchargement sur le pont 1 ;
+	   Raffine monter_pont1 de M0 en ajoutant le passage
+	   par la plateforme. Le MC doit être à l'arrêt.
+	   Les gardes grd6, grd7, grd8 sont redondantes mais
+	   nécessaires pour aider le prouveur automatique     */
+	event monter_pont1
+		refines monter_pont1
+		any
+			v
+		where
+			@grd1	v ∈ TYPE_VEHICULE
+			@grd2	etat_mc = FALSE
+			@grd4	places_mc ≥ taille(v)          /* assez de véhicules sur la plateforme */
+			@grd5	places_pont1 + taille(v) ≤ N   /* assez de place sur le pont 1 */
+			@grd6	places_mc − taille(v) ≥ 0      /* places_mc reste positif après déchargement */
+			@grd7	places_mc − taille(v) ≤ 6      /* places_mc reste dans les bornes */
+			@grd8	taille(v) > 0                  /* tout véhicule occupe au moins 1 place */
+		then
+			@act1	places_mc ≔ places_mc − taille(v)
+			@act2	places_pont1 ≔ places_pont1 + taille(v)
+	end
+
+	/*  Déchargement sur le pont 2 ;
+	   Le pont 1 doit être plein (priorité respectée)
+	   Le MC doit être au niveau 1                        */
+	event monter_pont2
+		refines monter_pont2
+		any
+			v
+		where
+			@grd1	v ∈ TYPE_VEHICULE
+			@grd2	etat_mc = FALSE
+			@grd3	niveau_mc = 1
+			@grd4	places_mc ≥ taille(v)
+			@grd5	places_pont1 = N                /* pont 1 saturé : priorité respectée */
+			@grd6	places_pont2 + taille(v) ≤ N
+			@grd7	places_mc − taille(v) ≥ 0
+			@grd8	places_mc − taille(v) ≤ 6
+			@grd9	taille(v) > 0
+		then
+			@act1	places_mc ≔ places_mc − taille(v)
+			@act2	places_pont2 ≔ places_pont2 + taille(v)
+	end
+
+	/* Déchargement sur le pont 3 ;
+	   Le pont 2 doit être plein (priorité respectée)
+	   Le MC doit être au niveau 2                        */
+	event monter_pont3
+		refines monter_pont3
+		any
+			v
+		where
+			@grd1	v ∈ TYPE_VEHICULE
+			@grd2	etat_mc = FALSE
+			@grd3	niveau_mc = 2
+			@grd4	places_mc ≥ taille(v)
+			@grd5	places_pont2 = N                /* pont 2 saturé : priorité respectée */
+			@grd6	places_pont3 + taille(v) ≤ N
+			@grd7	places_mc − taille(v) ≥ 0
+			@grd8	places_mc − taille(v) ≤ 6
+			@grd9	taille(v) > 0
+		then
+			@act1	places_mc ≔ places_mc − taille(v)
+			@act2	places_pont3 ≔ places_pont3 + taille(v)
+	end
+
+end
