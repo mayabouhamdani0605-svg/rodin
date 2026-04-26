@@ -1,0 +1,320 @@
+/* =========================================================
+   MACHINE M4 — Les barrières et règles de sécurité
+   Raffine : M1
+   Voit    : c0
+   Rôle    : Introduit les 4 barrières physiques du système
+             et garantit qu'elles sont toujours abaissées
+             lorsque le monte-charge est en mouvement.
+   ========================================================= */
+machine M4
+refines M1
+sees c0
+
+variables
+	places_pont1
+	places_pont2
+	places_pont3
+	niveau_mc
+	etat_mc
+	places_mc
+	barr_file1       /* barrière de la file d'attente 1 */
+	barr_file2       /* barrière de la file d'attente 2 */
+	barr_mc_entree   /* barrière d'entrée de la plateforme */
+	barr_mc_sortie   /* barrière de sortie de la plateforme */
+
+invariants
+	/* --- Typage hérité de M1 --- */
+	@inv1	places_pont1 ∈ ℤ
+	@inv2	places_pont2 ∈ ℤ
+	@inv3	places_pont3 ∈ ℤ
+	@inv4	niveau_mc ∈ {0, 1, 2}
+	@inv5	etat_mc ∈ BOOL
+	@inv6	places_mc ∈ ℤ
+	@inv7	places_mc ≥ 0
+	@inv8	places_mc ≤ 6
+	@inv9	places_pont1 ≥ 0
+	@inv10	places_pont1 ≤ N
+	@inv11	places_pont2 ≥ 0
+	@inv12	places_pont2 ≤ N
+	@inv13	places_pont3 ≥ 0
+	@inv14	places_pont3 ≤ N
+
+	/* --- Typage des nouvelles variables barrières ---
+	   TRUE = barrière levée, FALSE = barrière abaissée  */
+	@inv15	barr_file1 ∈ BOOL
+	@inv16	barr_file2 ∈ BOOL
+	@inv17	barr_mc_entree ∈ BOOL
+	@inv18	barr_mc_sortie ∈ BOOL
+
+	/* --- Invariants de sécurité : cœur de M4 ---
+	   Ces 6 invariants traduisent directement les
+	   exigences de sécurité du cahier des charges      */
+	@inv19	etat_mc = TRUE ⇒ barr_file1 = FALSE       /* MC en mouvement ⇒ barr_file1 abaissée */
+	@inv20	etat_mc = TRUE ⇒ barr_file2 = FALSE       /* MC en mouvement ⇒ barr_file2 abaissée */
+	@inv21	etat_mc = TRUE ⇒ barr_mc_entree = FALSE   /* MC en mouvement ⇒ barr_entree abaissée */
+	@inv22	etat_mc = TRUE ⇒ barr_mc_sortie = FALSE   /* MC en mouvement ⇒ barr_sortie abaissée */
+	@inv23	barr_mc_entree = TRUE ⇒ etat_mc = FALSE   /* barr_entree levée ⇒ MC obligatoirement à l'arrêt */
+	@inv24	barr_mc_sortie = TRUE ⇒ etat_mc = FALSE   /* barr_sortie levée ⇒ MC obligatoirement à l'arrêt */
+
+events
+
+	/* --- Initialisation : tout à zéro, toutes les barrières abaissées --- */
+	event INITIALISATION
+		then
+			@act1	places_pont1 ≔ 0
+			@act2	places_pont2 ≔ 0
+			@act3	places_pont3 ≔ 0
+			@act4	niveau_mc ≔ 0
+			@act5	etat_mc ≔ FALSE
+			@act6	places_mc ≔ 0
+			@act7	barr_file1 ≔ FALSE      /* toutes les barrières abaissées au départ */
+			@act8	barr_file2 ≔ FALSE
+			@act9	barr_mc_entree ≔ FALSE
+			@act10	barr_mc_sortie ≔ FALSE
+	end
+
+	/* --- Déplacement vers pont 2 ---
+	   Raffine M1 en ajoutant la condition que toutes
+	   les barrières doivent être abaissées avant
+	   tout mouvement du MC                            */
+	event deplacement_vers_pont2
+		refines deplacement_vers_pont2
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc ≠ 1
+			@grd3	places_mc > 0
+			@grd4	barr_file1 = FALSE          /* sécurité : barr_file1 abaissée */
+			@grd5	barr_file2 = FALSE          /* sécurité : barr_file2 abaissée */
+			@grd6	barr_mc_entree = FALSE      /* sécurité : barr_entree abaissée */
+			@grd7	barr_mc_sortie = FALSE      /* sécurité : barr_sortie abaissée */
+		then
+			@act1	etat_mc ≔ TRUE
+			@act2	niveau_mc ≔ 1
+	end
+
+	/* --- Déplacement vers pont 3 ---
+	   Même logique de sécurité que vers pont 2        */
+	event deplacement_vers_pont3
+		refines deplacement_vers_pont3
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc ≠ 2
+			@grd3	places_mc > 0
+			@grd4	barr_file1 = FALSE
+			@grd5	barr_file2 = FALSE
+			@grd6	barr_mc_entree = FALSE
+			@grd7	barr_mc_sortie = FALSE
+		then
+			@act1	etat_mc ≔ TRUE
+			@act2	niveau_mc ≔ 2
+	end
+
+	/* --- Déplacement vers pont 1 ---
+	   Même logique de sécurité. Pas de garde
+	   sur places_mc car le MC peut redescendre
+	   à vide pour chercher de nouveaux véhicules      */
+	event deplacement_vers_pont1
+		refines deplacement_vers_pont1
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc ≠ 0
+			@grd3	barr_file1 = FALSE
+			@grd4	barr_file2 = FALSE
+			@grd5	barr_mc_entree = FALSE
+			@grd6	barr_mc_sortie = FALSE
+		then
+			@act1	etat_mc ≔ TRUE
+			@act2	niveau_mc ≔ 0
+	end
+
+	/* --- Arrêt du monte-charge ---
+	   Aucune condition sur les barrières :
+	   le MC peut toujours s'arrêter                  */
+	event arret_monte_charge
+		refines arret_monte_charge
+		where
+			@grd1	etat_mc = TRUE
+		then
+			@act1	etat_mc ≔ FALSE
+	end
+
+	/* --- Ouverture barrière file 1 ---
+	   Conditions : MC à l'arrêt au niveau 0,
+	   plateforme non pleine, autres barrières
+	   abaissées (on n'ouvre pas deux barrières
+	   de file en même temps)                         */
+	event ouverture_barr_file1
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc = 0               /* la file est au niveau 0 seulement */
+			@grd3	barr_file1 = FALSE          /* pas déjà ouverte */
+			@grd4	barr_mc_entree = FALSE      /* barr_entree doit être fermée */
+			@grd5	barr_mc_sortie = FALSE      /* barr_sortie doit être fermée */
+			@grd6	places_mc < 6              /* plateforme non pleine */
+		then
+			@act1	barr_file1 ≔ TRUE
+	end
+
+	/* --- Fermeture barrière file 1 ---
+	   Peut se fermer dès qu'elle est ouverte         */
+	event fermeture_barr_file1
+		where
+			@grd1	barr_file1 = TRUE
+		then
+			@act1	barr_file1 ≔ FALSE
+	end
+
+	/* --- Ouverture barrière file 2 ---
+	   Même logique que file 1                        */
+	event ouverture_barr_file2
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc = 0
+			@grd3	barr_file2 = FALSE
+			@grd4	barr_mc_entree = FALSE
+			@grd5	barr_mc_sortie = FALSE
+			@grd6	places_mc < 6
+		then
+			@act1	barr_file2 ≔ TRUE
+	end
+
+	/* --- Fermeture barrière file 2 --- */
+	event fermeture_barr_file2
+		where
+			@grd1	barr_file2 = TRUE
+		then
+			@act1	barr_file2 ≔ FALSE
+	end
+
+	/* --- Ouverture barrière entrée MC ---
+	   S'ouvre pour laisser entrer les véhicules
+	   sur la plateforme. Les barrières de files
+	   doivent être abaissées avant               */
+	event ouverture_barr_mc_entree
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	niveau_mc = 0               /* chargement uniquement au niveau 0 */
+			@grd3	barr_mc_entree = FALSE      /* pas déjà ouverte */
+			@grd4	barr_file1 = FALSE          /* files fermées avant d'ouvrir l'entrée */
+			@grd5	barr_file2 = FALSE
+		then
+			@act1	barr_mc_entree ≔ TRUE
+	end
+
+	/* --- Fermeture barrière entrée MC --- */
+	event fermeture_barr_mc_entree
+		where
+			@grd1	barr_mc_entree = TRUE
+		then
+			@act1	barr_mc_entree ≔ FALSE
+	end
+
+	/* --- Ouverture barrière sortie MC ---
+	   S'ouvre pour laisser les véhicules se garer
+	   sur le pont. Il faut au moins un véhicule
+	   sur la plateforme pour justifier l'ouverture  */
+	event ouverture_barr_mc_sortie
+		where
+			@grd1	etat_mc = FALSE
+			@grd2	barr_mc_sortie = FALSE      /* pas déjà ouverte */
+			@grd3	barr_file1 = FALSE          /* files fermées par sécurité */
+			@grd4	barr_file2 = FALSE
+			@grd5	places_mc > 0              /* inutile d'ouvrir si plateforme vide */
+		then
+			@act1	barr_mc_sortie ≔ TRUE
+	end
+
+	/* --- Fermeture barrière sortie MC --- */
+	event fermeture_barr_mc_sortie
+		where
+			@grd1	barr_mc_sortie = TRUE
+		then
+			@act1	barr_mc_sortie ≔ FALSE
+	end
+
+	/* --- Chargement d'un véhicule sur la plateforme ---
+	   Raffine charger_mc de M1 en ajoutant la condition
+	   que la barrière d'entrée doit être levée          */
+	event charger_mc
+		refines charger_mc
+		any
+			v
+		where
+			@grd1	v ∈ TYPE_VEHICULE
+			@grd2	etat_mc = FALSE
+			@grd3	niveau_mc = 0
+			@grd4	places_mc + taille(v) ≤ 6
+			@grd5	barr_mc_entree = TRUE       /* entrée obligatoirement ouverte */
+		then
+			@act1	places_mc ≔ places_mc + taille(v)
+	end
+
+	/* --- Déchargement sur le pont 1 ---
+	   Raffine monter_pont1 de M1 en ajoutant la
+	   condition que la barrière de sortie doit
+	   être levée avant tout déchargement             */
+	event monter_pont1
+		refines monter_pont1
+		any
+			v
+		where
+			@grd1	v ∈ TYPE_VEHICULE
+			@grd2	etat_mc = FALSE
+			@grd4	places_mc ≥ taille(v)
+			@grd5	places_pont1 + taille(v) ≤ N
+			@grd6	places_mc − taille(v) ≥ 0
+			@grd7	places_mc − taille(v) ≤ 6
+			@grd8	taille(v) > 0
+			@grd9	barr_mc_sortie = TRUE       /* sortie obligatoirement ouverte */
+		then
+			@act1	places_mc ≔ places_mc − taille(v)
+			@act2	places_pont1 ≔ places_pont1 + taille(v)
+	end
+
+	/* --- Déchargement sur le pont 2 ---
+	   Même logique que pont 1, avec en plus :
+	   pont 1 saturé et MC au niveau 1                */
+	event monter_pont2
+		refines monter_pont2
+		any
+			v
+		where
+			@grd1	v ∈ TYPE_VEHICULE
+			@grd2	etat_mc = FALSE
+			@grd3	niveau_mc = 1
+			@grd4	places_mc ≥ taille(v)
+			@grd5	places_pont1 = N            /* pont 1 saturé : priorité respectée */
+			@grd6	places_pont2 + taille(v) ≤ N
+			@grd7	places_mc − taille(v) ≥ 0
+			@grd8	places_mc − taille(v) ≤ 6
+			@grd9	taille(v) > 0
+			@grd10	barr_mc_sortie = TRUE
+		then
+			@act1	places_mc ≔ places_mc − taille(v)
+			@act2	places_pont2 ≔ places_pont2 + taille(v)
+	end
+
+	/* --- Déchargement sur le pont 3 ---
+	   Même logique que pont 2, avec en plus :
+	   pont 2 saturé et MC au niveau 2                */
+	event monter_pont3
+		refines monter_pont3
+		any
+			v
+		where
+			@grd1	v ∈ TYPE_VEHICULE
+			@grd2	etat_mc = FALSE
+			@grd3	niveau_mc = 2
+			@grd4	places_mc ≥ taille(v)
+			@grd5	places_pont2 = N            /* pont 2 saturé : priorité respectée */
+			@grd6	places_pont3 + taille(v) ≤ N
+			@grd7	places_mc − taille(v) ≥ 0
+			@grd8	places_mc − taille(v) ≤ 6
+			@grd9	taille(v) > 0
+			@grd10	barr_mc_sortie = TRUE
+		then
+			@act1	places_mc ≔ places_mc − taille(v)
+			@act2	places_pont3 ≔ places_pont3 + taille(v)
+	end
+
+end
