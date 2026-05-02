@@ -1,3 +1,41 @@
+//context
+CONTEXT
+  cont
+EXTENDS
+  c0
+SETS
+  PONT
+  ETAT_MC
+  ETAT_BARERIERE
+  ETAT_RESERVATION
+CONSTANTS
+  pont_1 not symbolic
+  pont_2 not symbolic
+  pont_3 not symbolic
+  arret not symbolic
+  mouvement not symbolic
+  levee not symbolic
+  abaissee not symbolic
+  valide not symbolic
+  non_valide not symbolic
+  type_vehicule not symbolic
+  pont_sible not symbolic
+  reserv_vehicule not symbolic
+AXIOMS
+  axm1: partition(PONT,{pont_1},{pont_2},{pont_3}) not theorem
+  axm5: partition(ETAT_MC,{arret},{mouvement}) not theorem
+  axm6: arret ≠ mouvement not theorem
+  axm7: partition(ETAT_BARERIERE,{levee},{abaissee}) not theorem
+  axm8: levee ≠ abaissee not theorem
+  axm9: partition(ETAT_RESERVATION,{valide},{non_valide}) not theorem
+  axm10: valide ≠ non_valide not theorem
+  axm11: N = 20 not theorem
+  axm12: N ∈ ℕ1 not theorem
+  axm15: type_vehicule ∈ VEHICULE → TYPE_VEHICULE not theorem
+  axm16: pont_sible ∈ VEHICULE → PONT not theorem
+  axm17: reserv_vehicule ∈ VEHICULE → ETAT_RESERVATION not theorem
+END
+//machine
 MACHINE
   M2
 REFINES
