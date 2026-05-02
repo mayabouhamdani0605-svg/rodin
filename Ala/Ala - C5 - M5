@@ -1,174 +1,250 @@
-MACHINE M5
+MACHINE
+  M5
 REFINES
-    M4
-
+  M4
+  M3
+SEES
+  cont
 VARIABLES
-    places_pont1
-    places_pont2
-    places_pont3
-    etat_mc
-    niveau_mc
-    places_mc
-    file1
-    file2
-    barr_file1
-    barr_file2
-    barr_mc_entree
-    barr_mc_sortie
-    type_vehicule_actif
-    permission_envoyee
-    rejete
-    embarque
-
+  type_vehicule_actif
+  permission_envoyee
+  rejete
+  embarque
+  places_pont1
+  places_pont2
+  places_pont3
+  niveau_mc
+  etat_mc
+  places_mc
+  barr_file1
+  barr_file2
+  barr_mc_entree
+  barr_mc_sortie
+  file1
+  file2
 INVARIANTS
-    inv1: embarque ∈ VEHICULE ↔ PONT not theorem
-    inv2: dom(embarque) ∩ rejete = ∅ not theorem
-    inv3: dom(embarque) ∩ ran(file1) = ∅ theorem
-    inv4: dom(embarque) ∩ ran(file2) = ∅ not theorem
+  inv1: embarque ∈ VEHICULE ↦ PONT not theorem
+  inv2: rejete ∩ dom(embarque) = ∅ not theorem
+  inv3: dom(embarque) ∩ ran(file1) = ∅ not theorem
+  inv4: dom(embarque) ∩ ran(file2) = ∅ not theorem
+  inv5: type_vehicule_actif ∈ TYPE_VEHICULE not theorem
+  inv6: permission_envoyee ∈ BOOL not theorem
+  inv7: rejete ⊆ VEHICULE not theorem
 
 EVENTS
 
-INITIALISATION
-    THEN
-        act1: places_pont1 = 0
-        act2: places_pont2 = 0
-        act3: places_pont3 = 0
-        act4: etat_mc = arret
-        act5: niveau_mc = 0
-        act6: places_mc = 0
-        act7: file1 = ∅
-        act8: file2 = ∅
-        act9: barr_file1 = abaissee
-        act10: barr_file2 = abaissee
-        act11: barr_mc_entree = abaissee
-        act12: barr_mc_sortie = abaissee
-        act13: type_vehicule_actif = voiture
-        act14: permission_envoyee = FALSE
-        act15: rejete = ∅
-        act16: embarque = ∅
-    END
+  INITIALISATION: extended ordinary
+  THEN
+    act13: type_vehicule_actif ≔ voiture
+    act14: permission_envoyee ≔ FALSE
+    act15: rejete ≔ ∅
+    act16: embarque ≔ ∅
+  END
 
-charger_mc_file1
-    ANY v
-    WHERE
-        grd1: v ∈ VEHICULE not theorem
-        grd2: v = first(file1) not theorem
-        grd3: etat_mc = arret not theorem
-        grd4: niveau_mc = 0 not theorem
-        grd5: barr_file1 = levee not theorem
-        grd6: barr_mc_entree = levee not theorem
-        grd7: places_mc + taille(type_vehicule(v)) ≤ 6 not theorem
-        grd8: reserv_vehicule(v) = valide not theorem
-        grd9: permission_envoyee = TRUE not theorem
-    THEN
-        act1: places_mc = places_mc + taille(type_vehicule(v))
-        act2: file1(v) = tail(file1)
-        act3: permission_envoyee = FALSE
-    END
+  charger_mc_file1: not extended ordinary
+  ANY
+    v
+  WHERE
+    grd1: v ∈ VEHICULE not theorem
+    grd2: v = first(file1) not theorem
+    grd3: etat_mc = arret not theorem
+    grd4: niveau_mc = 0 not theorem
+    grd5: barr_file1 = levee not theorem
+    grd6: barr_mc_entree = levee not theorem
+    grd7: places_mc + taille(type_vehicule(v)) ≤ 6 not theorem
+    grd8: reserv_vehicule(v) = valide not theorem
+    grd9: permission_envoyee = TRUE not theorem
+  THEN
+    act1: places_mc ≔ places_mc + taille(type_vehicule(v))
+    act2: file1 ≔ tail(file1)
+    act3: permission_envoyee ≔ FALSE
+  END
 
-charger_mc_file2
-    ANY v
-    WHERE
-        grd1: v ∈ VEHICULE not theorem
-        grd2: v = first(file2) not theorem
-        grd3: etat_mc = arret not theorem
-        grd4: niveau_mc = 0 not theorem
-        grd5: barr_file2 = levee not theorem
-        grd6: barr_mc_entree = levee not theorem
-        grd7: places_mc + taille(type_vehicule(v)) ≤ 6 not theorem
-        grd8: reserv_vehicule(v) = valide not theorem
-        grd9: permission_envoyee = TRUE not theorem
-    THEN
-        act1: places_mc = places_mc + taille(type_vehicule(v))
-        act2: file2(v) = tail(file2)
-        act3: permission_envoyee = FALSE
-    END
+  charger_mc_file2: not extended ordinary
+  ANY
+    v
+  WHERE
+    grd1: v ∈ VEHICULE not theorem
+    grd2: v = first(file2) not theorem
+    grd3: etat_mc = arret not theorem
+    grd4: niveau_mc = 0 not theorem
+    grd5: barr_file2 = levee not theorem
+    grd6: barr_mc_entree = levee not theorem
+    grd7: places_mc + taille(type_vehicule(v)) ≤ 6 not theorem
+    grd8: reserv_vehicule(v) = valide not theorem
+    grd9: permission_envoyee = TRUE not theorem
+  THEN
+    act1: places_mc ≔ places_mc + taille(type_vehicule(v))
+    act2: file2 ≔ tail(file2)
+    act3: permission_envoyee ≔ FALSE
+  END
+  stationnement_pont1: not extended ordinary
+  ANY
+    v
+  WHERE
+    grd1: v ∈ VEHICULE not theorem
+    grd2: etat_mc = arret not theorem
+    grd3: niveau_mc = 0 not theorem
+    grd4: barr_mc_sortie = levee not theorem
+    grd5: places_pont1 + taille(type_vehicule(v)) ≤ N not theorem
+    grd6: v ∉ dom(embarque) not theorem
+  THEN
+    act1: places_mc ≔ places_mc - taille(type_vehicule(v))
+    act2: places_pont1 ≔ places_pont1 + taille(type_vehicule(v))
+    act3: embarque ≔ embarque ∪ {v ↦ pont1}
+  END
 
-stationnement_pont1
-    ANY v
-    WHERE
-        grd1: v ∈ VEHICULE not theorem
-        grd2: etat_mc = arret not theorem
-        grd3: niveau_mc = 0 not theorem
-        grd4: barr_mc_sortie = levee not theorem
-        grd5: place_pont1 + taille(type_vehicule(v)) ≤ N not theorem
-        grd6: v ∉ dom(embarque) not theorem
-    THEN
-        act1: places_mc = places_mc - taille(type_vehicule(v))
-        act2: places_pont1 = places_pont1 + taille(type_vehicule(v))
-        act3: embarque = embarque ∪ {v ↦ pont1}
-    END
+  stationnement_pont2: extended ordinary
+  ANY
+    v
+  WHERE
+    grd1: v ∈ VEHICULE not theorem
+    grd2: etat_mc = arret not theorem
+    grd3: niveau_mc = 1 not theorem
+    grd4: barr_mc_sortie = levee not theorem
+    grd5: places_pont2 + taille(type_vehicule(v)) ≤ N not theorem
+    grd6: v ∉ dom(embarque) not theorem
+  THEN
+    act1: places_mc ≔ places_mc - taille(type_vehicule(v))
+    act2: places_pont2 ≔ places_pont2 + taille(type_vehicule(v))
+    act3: embarque ≔ embarque ∪ {v ↦ pont2}
+  END
 
-stationnement_pont2
-    ANY v
-    WHERE
-        grd1: v ∈ VEHICULE not theorem
-        grd2: etat_mc = arret not theorem
-        grd3: niveau_mc = 0 not theorem
-        grd4: barr_mc_sortie = levee not theorem
-        grd5: place_pont2 + taille(type_vehicule(v)) ≤ N not theorem
-        grd6: v ∉ dom(embarque) not theorem
-    THEN
-        act1: places_mc = places_mc - taille(type_vehicule(v))
-        act2: places_pont2 = places_pont2 + taille(type_vehicule(v))
-        act3: embarque = embarque ∪ {v ↦ pont2}
-    END
+  stationnement_pont3: not extended ordinary
+  ANY
+    v
+  WHERE
+    grd1: v ∈ VEHICULE not theorem
+    grd2: etat_mc = arret not theorem
+    grd3: niveau_mc = 2 not theorem
+    grd4: barr_mc_sortie = levee not theorem
+    grd5: places_pont3 + taille(type_vehicule(v)) ≤ N not theorem
+    grd6: v ∉ dom(embarque) not theorem
+  THEN
+    act1: places_mc ≔ places_mc - taille(type_vehicule(v))
+    act2: places_pont3 ≔ places_pont3 + taille(type_vehicule(v))
+    act3: embarque ≔ embarque ∪ {v ↦ pont3}
+  END
 
-stationnement_pont3
-    ANY v
-    WHERE
-        grd1: v ∈ VEHICULE not theorem
-        grd2: etat_mc = arret not theorem
-        grd3: niveau_mc = 0 not theorem
-        grd4: barr_mc_sortie = levee not theorem
-        grd5: place_pont3 + taille(type_vehicule(v)) ≤ N not theorem
-        grd6: v ∉ dom(embarque) not theorem
-    THEN
-        act1: places_mc = places_mc - taille(type_vehicule(v))
-        act2: places_pont3 = places_pont3 + taille(type_vehicule(v))
-        act3: embarque = embarque ∪ {v ↦ pont3}
-    END
+  deplacement_mc_pont1: not extended ordinary
+  WHERE
+    grd1: etat_mc = arret not theorem
+    grd2: niveau_mc ≠ 0 not theorem
+    grd3: place_mc > 0 not theorem
+    grd4: barr_file1 = abaissee not theorem
+    grd5: barr_file2 = abaissee not theorem
+    grd6: barr_mc_entree = abaissee not theorem
+    grd7: barr_mc_sortie = abaissee not theorem
+  THEN
+    act1: etat_mc ≔ mouvement
+    act2: niveau_mc ≔ 0
+  END
 
-deplacement_mc_pont1
-    WHERE
-        grd1: etat_mc = arret not theorem
-        grd2: niveau ≠ 0 not theorem
-        grd3: place_mc > 0 not theorem
-        grd4: barr_file1 = abaissee not theorem
-        grd5: barr_file2 = abaissee not theorem
-        grd6: barr_mc_entree = abaissee not theorem
-        grd7: barr_mc_sortie = abaissee not theorem
-    THEN
-        act1: etat_mc = mouvement
-        act2: niveau_mc = 0
-    END
+  deplacement_mc_pont2: not extended ordinary
+  WHERE
+    grd1: etat_mc = arret not theorem
+    grd2: niveau_mc ≠ 1 not theorem
+    grd3: place_mc > 0 not theorem
+    grd4: barr_file1 = abaissee not theorem
+    grd5: barr_file2 = abaissee not theorem
+    grd6: barr_mc_entree = abaissee not theorem
+    grd7: barr_mc_sortie = abaissee not theorem
+  THEN
+    act1: etat_mc ≔ mouvement
+    act2: niveau_mc ≔ 1
+  END
+  deplacement_mc_pont3: not extended ordinary
+  WHERE
+    grd1: etat_mc = arret not theorem
+    grd2: niveau_mc ≠ 2 not theorem
+    grd3: place_mc > 0 not theorem
+    grd4: barr_file1 = abaissee not theorem
+    grd5: barr_file2 = abaissee not theorem
+    grd6: barr_mc_entree = abaissee not theorem
+    grd7: barr_mc_sortie = abaissee not theorem
+  THEN
+    act1: etat_mc ≔ mouvement
+    act2: niveau_mc ≔ 2
+  END
 
-deplacement_mc_pont2
-    WHERE
-        grd1: etat_mc = arret not theorem
-        grd2: niveau ≠ 1 not theorem
-        grd3: place_mc > 0 not theorem
-        grd4: barr_file1 = abaissee not theorem
-        grd5: barr_file2 = abaissee not theorem
-        grd6: barr_mc_entree = abaissee not theorem
-        grd7: barr_mc_sortie = abaissee not theorem
-    THEN
-        act1: etat_mc = mouvement
-        act2: niveau_mc = 1
-    END
+  deplacement_vers_pont2: extended ordinary
+  REFINES
+    deplacement_vers_pont2
+  END
 
-deplacement_mc_pont3
-    WHERE
-        grd1: etat_mc = arret not theorem
-        grd2: niveau ≠ 2 not theorem
-        grd3: place_mc > 0 not theorem
-        grd4: barr_file1 = abaissee not theorem
-        grd5: barr_file2 = abaissee not theorem
-        grd6: barr_mc_entree = abaissee not theorem
-        grd7: barr_mc_sortie = abaissee not theorem
-    THEN
-        act1: etat_mc = mouvement
-        act2: niveau_mc = 2
-    END
+  deplacement_vers_pont3: extended ordinary
+  REFINES
+    deplacement_vers_pont3
+  END
+
+  deplacement_vers_pont1: extended ordinary
+  REFINES
+    deplacement_vers_pont1
+  END
+
+  arret_monte_charge: not extended ordinary
+  REFINES
+    arret_monte_charge
+  END
+
+  ouverture_barr_file1: not extended ordinary
+  REFINES
+    ouverture_barr_file1
+  END
+
+  fermeture_barr_file1: not extended ordinary
+  REFINES
+    fermeture_barr_file1
+  END
+
+  ouverture_barr_file2: extended ordinary
+  REFINES
+    ouverture_barr_file2
+  END
+
+  fermeture_barr_file2: not extended ordinary
+  REFINES
+    fermeture_barr_file2
+  END
+
+  ouverture_barr_mc_entree: extended ordinary
+  REFINES
+    ouverture_barr_mc_entree
+  END
+
+  fermeture_barr_mc_entree: not extended ordinary
+  REFINES
+    fermeture_barr_mc_entree
+  END
+
+  ouverture_barr_mc_sortie: not extended ordinary
+  REFINES
+    ouverture_barr_mc_sortie
+  END
+
+  fermeture_barr_mc_sortie: not extended ordinary
+  REFINES
+    fermeture_barr_mc_sortie
+  END
+
+  charger_mc: extended ordinary
+  REFINES
+    charger_mc
+  END
+
+  monter_pont1: extended ordinary
+  REFINES
+    monter_pont1
+  END
+
+  monter_pont2: extended ordinary
+  REFINES
+    monter_pont2
+  END
+
+  monter_pont3: extended ordinary
+  REFINES
+    monter_pont3
+  END
 
 END
