@@ -1,4 +1,3 @@
-/* pas de contexte */
 machine M1
 refines M0
 sees c0
