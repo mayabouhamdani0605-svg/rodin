@@ -1,0 +1,33 @@
+9. Machine M1 — Déplacement du monte-charge
+M1 raffine M0. Elle introduit le monte-charge comme mécanisme de transport des véhicules entre les files d'attente et les ponts du ferry.
+Trois nouvelles variables sont introduites :
+
+niveau_mc représente la position actuelle du monte-charge. Elle vaut 0 au niveau du pont 1, 1 au niveau du pont 2, et 2 au niveau du pont 3.
+etat_mc est un booléen qui indique si le monte-charge est en mouvement (TRUE) ou à l'arrêt (FALSE).
+places_mc représente le nombre de places occupées sur la plateforme, avec une capacité maximale de 6 places.
+
+Les invariants de M1 se divisent en deux catégories. Les invariants de typage assurent que niveau_mc reste dans {0, 1, 2}, que etat_mc est bien un booléen, et que places_mc est un entier. Les invariants de bornes garantissent que places_mc reste entre 0 et 6, et que chaque pont reste entre 0 et N places occupées. Ces invariants de bornes ont été formulés de façon à permettre au prouveur automatique de Rodin de décharger toutes les obligations de preuve sans intervention manuelle, notamment en ajoutant des gardes redondantes dans les événements de déchargement.
+Plusieurs événements sont introduits ou raffinés :
+
+deplacement_vers_pont1, deplacement_vers_pont2 et deplacement_vers_pont3 modélisent le déplacement vertical du monte-charge. Ils ne peuvent se déclencher que si le monte-charge est à l'arrêt et n'est pas déjà au niveau cible. Les déplacements vers pont 2 et pont 3 exigent en plus qu'au moins un véhicule soit présent sur la plateforme, tandis que le retour vers pont 1 peut se faire à vide pour aller chercher de nouveaux véhicules.
+arret_monte_charge modélise l'arrêt du monte-charge une fois arrivé à destination.
+charger_mc permet à un véhicule de monter sur la plateforme, à condition que le monte-charge soit à l'arrêt au niveau 0 et qu'il reste suffisamment de place.
+monter_pont1, monter_pont2 et monter_pont3 raffinent les événements abstraits de M0 en précisant qu'un véhicule ne peut se garer sur un pont que depuis la plateforme du monte-charge, lorsque celui-ci est arrêté au bon niveau. Des gardes redondantes ont été ajoutées dans ces événements pour aider le prouveur automatique à décharger les obligations de preuve.
+
+
+10. Machine M4 — Les barrières et règles de sécurité
+M4 raffine M3_exception. Elle introduit les barrières physiques du système ainsi que les règles de sécurité qui leur sont associées.
+Quatre nouvelles variables booléennes sont ajoutées :
+
+barr_file1 et barr_file2 représentent les barrières des deux files d'attente.
+barr_mc_entree et barr_mc_sortie représentent les barrières d'entrée et de sortie du monte-charge.
+
+Pour toutes ces variables, TRUE signifie que la barrière est levée et FALSE qu'elle est abaissée. Elles sont toutes initialisées à FALSE.
+Les invariants de M4 combinent les invariants hérités des machines précédentes et six nouveaux invariants de sécurité qui constituent le cœur de cette machine. Les quatre premiers (inv25 à inv28) expriment que si le monte-charge est en mouvement alors chacune des quatre barrières est obligatoirement abaissée. Les deux derniers (inv29 et inv30) expriment la réciproque pour les barrières du monte-charge : si la barrière d'entrée ou de sortie est levée, alors le monte-charge est nécessairement à l'arrêt. Ces six invariants traduisent directement les exigences de sécurité décrites dans le cahier des charges et sont vérifiés automatiquement par Rodin sur chaque événement.
+Huit nouveaux événements sont introduits pour gérer l'ouverture et la fermeture de chaque barrière :
+
+ouverture_barr_file1 et ouverture_barr_file2 ne peuvent se déclencher que si le monte-charge est à l'arrêt au niveau 0, que la plateforme n'est pas pleine, et que les barrières du monte-charge sont abaissées. L'ouverture de la barrière d'entrée du monte-charge (ouverture_barr_mc_entree) exige que les deux barrières de files soient levées, ce qui reflète le flux réel de véhicules dans le système.
+fermeture_barr_file1, fermeture_barr_file2, fermeture_barr_mc_entree et fermeture_barr_mc_sortie referment les barrières une fois leur rôle accompli.
+ouverture_barr_mc_sortie s'ouvre pour laisser les véhicules se garer sur le pont, à condition que le monte-charge soit à l'arrêt et qu'il y ait au moins un véhicule sur la plateforme.
+
+Les événements hérités de M3_exception sont raffinés pour intégrer les conditions de barrières. En particulier, l'événement charger_mc a été enrichi pour prendre en compte à la fois le type du véhicule et son appartenance à une file, ce qui permet de retirer le véhicule de la file et de mettre à jour la fonction pont_cible_actuel au moment du chargement. Les événements de déplacement du monte-charge exigent désormais que toutes les barrières soient abaissées avant tout mouvement, et les événements de déchargement sur les ponts exigent que la barrière de sortie soit levée.
