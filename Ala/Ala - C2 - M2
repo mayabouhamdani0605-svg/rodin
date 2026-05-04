@@ -1,209 +1,227 @@
-//context
-CONTEXT
-  cont
-EXTENDS
-  c0
-SETS
-  PONT
-  ETAT_MC
-  ETAT_BARERIERE
-  ETAT_RESERVATION
-CONSTANTS
-  pont_1 not symbolic
-  pont_2 not symbolic
-  pont_3 not symbolic
-  arret not symbolic
-  mouvement not symbolic
-  levee not symbolic
-  abaissee not symbolic
-  valide not symbolic
-  non_valide not symbolic
-  type_vehicule not symbolic
-  pont_sible not symbolic
-  reserv_vehicule not symbolic
-AXIOMS
-  axm1: partition(PONT,{pont_1},{pont_2},{pont_3}) not theorem
-  axm5: partition(ETAT_MC,{arret},{mouvement}) not theorem
-  axm6: arret ≠ mouvement not theorem
-  axm7: partition(ETAT_BARERIERE,{levee},{abaissee}) not theorem
-  axm8: levee ≠ abaissee not theorem
-  axm9: partition(ETAT_RESERVATION,{valide},{non_valide}) not theorem
-  axm10: valide ≠ non_valide not theorem
-  axm11: N = 20 not theorem
-  axm12: N ∈ ℕ1 not theorem
-  axm15: type_vehicule ∈ VEHICULE → TYPE_VEHICULE not theorem
-  axm16: pont_sible ∈ VEHICULE → PONT not theorem
-  axm17: reserv_vehicule ∈ VEHICULE → ETAT_RESERVATION not theorem
-END
-//machine
-MACHINE
-  M2
-REFINES
-  M1
-SEES
-  cont
-VARIABLES
-  places_pont1
-  places_pont2
-  places_pont3
-  niveau_mc
-  etat_mc
-  places_mc
-  file1
-  file2
-INVARIANTS
-  inv1: file1 ⊆ VEHICULE not theorem
-  inv2: file2 ⊆ VEHICULE not theorem
-  inv3: file1 ∩ file2 = ∅ not theorem
+context cont
+extends C3
+sets
+	PONT
+	ETAT_MC
+	ETAT_BARERIERE
+constants
+	pont_1
+	pont_2
+	pont_3
+	arret
+	mouvement
+	levee
+	abaissee
+	type_vehicule
+	pont_cible
+axioms
+	@axm1	partition(PONT, {pont_1}, {pont_2}, {pont_3})
+	@axm5	partition(ETAT_MC, {arret}, {mouvement})
+	@axm6	arret ≠ mouvement
+	@axm7	partition(ETAT_BARERIERE, {levee}, {abaissee})
+	@axm8	levee ≠ abaissee
+	@axm15	type_vehicule ∈ VEHICULE → TYPE_VEHICULE
+	@axm16	pont_cible ∈ VEHICULE → PONT
+	@axm19	reservation(v1) = valide
+	@axm20	reservation(v2) = valide
+	@axm21	reservation(v3) = valide
+	@axm22	reservation(v4) = invalide
+	@axm23	reservation(v5) = invalide
+	@axm24	type_vehicule(v1) = voiture
+	@axm25	type_vehicule(v2) = camion1
+	@axm26	type_vehicule(v3) = camion2
+	@axm27	type_vehicule(v4) = voiture
+	@axm28	type_vehicule(v5) = camion3
+	@axm29	pont_cible(v1) = pont_1
+	@axm30	pont_cible(v2) = pont_1
+	@axm31	pont_cible(v3) = pont_1
+	@axm32	pont_cible(v4) = pont_1
+	@axm33	pont_cible(v5) = pont_1
+end
 
-EVENTS
+machine M2
+refines M1
+sees c0
 
-  INITIALISATION: extended ordinary
-  THEN
-    act1: places_pont1 ≔ 0
-    act2: places_pont2 ≔ 0
-    act3: places_pont3 ≔ 0
-    act4: niveau_mc ≔ 0
-    act5: etat_mc ≔ FALSE
-    act6: places_mc ≔ 0
-    act7: file1 ≔ ∅
-    act8: file2 ≔ ∅
-  END
+variables
+	places_pont1
+	places_pont2
+	places_pont3
+	niveau_mc
+	etat_mc
+	places_mc
+	file1
+	file2
 
-  arrivee_vehicule_file1: not extended ordinary
-  ANY
-    v
-  WHERE
-    grd1: v ∈ VEHICULE not theorem
-    grd2: v ∉ file1 not theorem
-    grd3: v ∉ file2 not theorem
-  THEN
-    act1: file1 ≔ file1 ∪ {v}
-  END
+invariants
+    @inv1	places_pont1 ∈ ℤ
+	@inv2	places_pont2 ∈ ℤ
+	@inv3	places_pont3 ∈ ℤ
+	@inv4	niveau_mc ∈ {0, 1, 2}
+	@inv5	etat_mc ∈ BOOL
+	@inv6	places_mc ∈ ℤ
+	@inv7	places_mc ≥ 0
+	@inv8	places_mc ≤ 6
+	@inv9	places_pont1 ≥ 0
+	@inv10	places_pont1 ≤ N
+	@inv11	places_pont2 ≥ 0
+	@inv12	places_pont2 ≤ N
+	@inv13	places_pont3 ≥ 0
+	@inv14	places_pont3 ≤ N
+	@inv15	file1 ⊆ VEHICULE
+	@inv16	file2 ⊆ VEHICULE
+	@inv17	∀ x · x ∈ file1 ⇒ x ∉ file2
+    @inv18	∀ x · x ∈ file2 ⇒ x ∉ file1
 
-  arrivee_vehicule_file2: not extended ordinary
-  ANY
-    v
-  WHERE
-    grd1: v ∈ VEHICULE not theorem
-    grd2: v ∉ file1 not theorem
-    grd3: v ∉ file2 not theorem
-  THEN
-    act1: file2 ≔ file2 ∪ {v}
-  END
+events
 
-  deplacement_vers_pont2: extended ordinary
-  REFINES
-    deplacement_vers_pont2
-  WHERE
-    grd1: etat_mc = FALSE not theorem
-    grd2: niveau_mc ≠ 1 not theorem
-    grd3: places_mc > 0 not theorem
-  THEN
-    act1: etat_mc ≔ TRUE
-    act2: niveau_mc ≔ 1
-  END
+ event INITIALISATION
+	then
+		@act1	places_pont1 ≔ 0
+		@act2	places_pont2 ≔ 0
+		@act3	places_pont3 ≔ 0
+		@act4	niveau_mc ≔ 0
+		@act5	etat_mc ≔ FALSE
+		@act6	places_mc ≔ 0
+		@act7	file1 ≔ ∅
+		@act8	file2 ≔ ∅
+ end
 
-  deplacement_vers_pont3: extended ordinary
-  REFINES
-    deplacement_vers_pont3
-  WHERE
-    grd1: etat_mc = FALSE not theorem
-    grd2: niveau_mc ≠ 2 not theorem
-    grd3: places_mc > 0 not theorem
-  THEN
-    act1: etat_mc ≔ TRUE
-    act2: niveau_mc ≔ 2
-  END
-  deplacement_vers_pont1: extended ordinary
-  REFINES
-    deplacement_vers_pont1
-  WHERE
-    grd1: etat_mc = FALSE not theorem
-    grd2: niveau_mc ≠ 0 not theorem
-  THEN
-    act1: etat_mc ≔ TRUE
-    act2: niveau_mc ≔ 0
-  END
+ event arrivee_vehicule_file1
+	any
+		v
+	where
+		@grd1	v ∈ VEHICULE
+		@grd2	v ∉ file1
+		@grd3	v ∉ file2
+		@grd4	∀ x · x ∈ file1 ⇒ x ∉ file2
+	then
+		@act1	file1 ≔ file1 ∪ {v}
+ end
 
-  arret_monte_charge: extended ordinary
-  REFINES
-    arret_monte_charge
-  WHERE
-    grd1: etat_mc = TRUE not theorem
-  THEN
-    act1: etat_mc ≔ FALSE
-  END
+ event arrivee_vehicule_file2
+	any
+		v
+	where
+		@grd1	v ∈ VEHICULE
+		@grd2	v ∉ file1
+		@grd3	v ∉ file2
+		@grd4	∀ x · x ∈ file2 ⇒ x ∉ file1
+	then
+		@act1	file2 ≔ file2 ∪ {v}
+ end
 
-  charger_mc: extended ordinary
-  REFINES
-    charger_mc
-  ANY
-    v
-  WHERE
-    grd1: v ∈ TYPE_VEHICULE not theorem
-    grd2: etat_mc = FALSE not theorem
-    grd3: niveau_mc = 0 not theorem
-    grd4: places_mc + taille(v) ≤ 6 not theorem
-  THEN
-    act1: places_mc ≔ places_mc + taille(v)
-  END
+ event deplacement_vers_pont2
+	refines deplacement_vers_pont2
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 1
+		@grd3	places_mc > 0
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 1
+ end
 
-  monter_pont1: extended ordinary
-  REFINES
-    monter_pont1
-  ANY
-    v
-  WHERE
-    grd1: v ∈ TYPE_VEHICULE not theorem
-    grd2: etat_mc = FALSE not theorem
-    grd4: places_mc ≥ taille(v) not theorem
-    grd5: places_pont1 + taille(v) ≤ N not theorem
-    grd6: places_mc - taille(v) ≥ 0 not theorem
-    grd7: places_mc - taille(v) ≤ 6 not theorem
-    grd8: taille(v) > 0 not theorem
-  THEN
-    act1: places_mc ≔ places_mc - taille(v)
-    act2: places_pont1 ≔ places_pont1 + taille(v)
-  END
+ event deplacement_vers_pont3
+	refines deplacement_vers_pont3
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 2
+		@grd3	places_mc > 0
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 2
+ end
 
-  monter_pont2: extended ordinary
-  REFINES
-    monter_pont2
-  ANY
-    v
-  WHERE
-    grd1: v ∈ TYPE_VEHICULE not theorem
-    grd2: etat_mc = FALSE not theorem
-    grd3: niveau_mc = 1 not theorem
-    grd4: places_mc ≥ taille(v) not theorem
-    grd5: places_pont1 = N not theorem
-    grd6: places_pont2 + taille(v) ≤ N not theorem
-    grd7: places_mc - taille(v) ≥ 0 not theorem
-    grd8: places_mc - taille(v) ≤ 6 not theorem
-    grd9: taille(v) > 0 not theorem
-  THEN
-    act1: places_mc ≔ places_mc - taille(v)
-    act2: places_pont2 ≔ places_pont2 + taille(v)
-  END
-  monter_pont3: extended ordinary
-  REFINES
-    monter_pont3
-  ANY
-    v
-  WHERE
-    grd1: v ∈ TYPE_VEHICULE not theorem
-    grd2: etat_mc = FALSE not theorem
-    grd3: niveau_mc = 2 not theorem
-    grd4: places_mc ≥ taille(v) not theorem
-    grd5: places_pont2 = N not theorem
-    grd6: places_pont3 + taille(v) ≤ N not theorem
-    grd7: places_mc - taille(v) ≥ 0 not theorem
-    grd8: places_mc - taille(v) ≤ 6 not theorem
-    grd9: taille(v) > 0 not theorem
-  THEN
-    act1: places_mc ≔ places_mc - taille(v)
-    act2: places_pont3 ≔ places_pont3 + taille(v)
-  END
+ event deplacement_vers_pont1
+	refines deplacement_vers_pont1
+	where
+		@grd1	etat_mc = FALSE
+		@grd2	niveau_mc ≠ 0
+	then
+		@act1	etat_mc ≔ TRUE
+		@act2	niveau_mc ≔ 0
+ end
 
-END
+ event arret_monte_charge
+	refines arret_monte_charge
+	where
+		@grd1	etat_mc = TRUE
+	then
+		@act1	etat_mc ≔ FALSE
+ end
+
+ event charger_mc
+	refines charger_mc
+	any
+		v
+		veh
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 0
+		@grd4	places_mc + taille(v) ≤ 6
+		@grd5	veh ∈ VEHICULE
+		@grd6	veh ∈ file1 ∨ veh ∈ file2
+	then
+		@act1	places_mc ≔ places_mc + taille(v)
+		@act2	file1 ≔ file1 ∖ {veh}
+		@act3	file2 ≔ file2 ∖ {veh}
+end
+
+ event monter_pont1
+	refines monter_pont1
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont1 + taille(v) ≤ N
+		@grd6	places_mc − taille(v) ≥ 0
+		@grd7	places_mc − taille(v) ≤ 6
+		@grd8	taille(v) > 0
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont1 ≔ places_pont1 + taille(v)
+ end
+
+ event monter_pont2
+	refines monter_pont2
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 1
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont1 = N
+		@grd6	places_pont2 + taille(v) ≤ N
+		@grd7	places_mc − taille(v) ≥ 0
+		@grd8	places_mc − taille(v) ≤ 6
+		@grd9	taille(v) > 0
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont2 ≔ places_pont2 + taille(v)
+ end
+
+ event monter_pont3
+	refines monter_pont3
+	any
+		v
+	where
+		@grd1	v ∈ TYPE_VEHICULE
+		@grd2	etat_mc = FALSE
+		@grd3	niveau_mc = 2
+		@grd4	places_mc ≥ taille(v)
+		@grd5	places_pont2 = N
+		@grd6	places_pont3 + taille(v) ≤ N
+		@grd7	places_mc − taille(v) ≥ 0
+		@grd8	places_mc − taille(v) ≤ 6
+		@grd9	taille(v) > 0
+	then
+		@act1	places_mc ≔ places_mc − taille(v)
+		@act2	places_pont3 ≔ places_pont3 + taille(v)
+ end
+
+end
