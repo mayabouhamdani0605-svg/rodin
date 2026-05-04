@@ -1,90 +1,89 @@
+context c0
+sets
+	TYPE_VEHICULE
+	VEHICULE
+constants
+	v1
+	v2
+	v3
+	v4
+	v5
+	voiture
+	camion1
+	camion2
+	camion3
+	N
+	taille
+axioms
+	@axm0	{v1, v2, v3, v4, v5} ⊆ VEHICULE
+	@axm1	N = 20
+	@axm2	N ∈ ℕ1
+	@axm3	voiture ∈ TYPE_VEHICULE
+	@axm4	camion1 ∈ TYPE_VEHICULE
+	@axm5	camion2 ∈ TYPE_VEHICULE
+	@axm6	camion3 ∈ TYPE_VEHICULE
+	@axm7	taille ∈ TYPE_VEHICULE → ℕ
+	@axm8	taille(voiture) = 1
+	@axm9	taille(camion1) = 1
+	@axm10	taille(camion2) = 2
+	@axm11	taille(camion3) = 3
+	@axm12	∀ v · v ∈ TYPE_VEHICULE ⇒ taille(v) > 0
+	@axm13	v1 ∈ VEHICULE
+	@axm14	v2 ∈ VEHICULE
+	@axm15	v3 ∈ VEHICULE
+	@axm16	v4 ∈ VEHICULE
+	@axm17	v5 ∈ VEHICULE
+	@axm18	v1 ≠ v2 ∧ v1 ≠ v3 ∧ v1 ≠ v4 ∧ v1 ≠ v5
+	@axm19	v2 ≠ v3 ∧ v2 ≠ v4 ∧ v2 ≠ v5
+	@axm20	v3 ≠ v4 ∧ v3 ≠ v5
+	@axm21	v4 ≠ v5
+end
+machine M0 sees c0 
 
-    CONTEXT
-		C0 	›
-	SETS
-	⚬	VEHICULE	 ›
-	⚬	TYPE_VEHICULE	 ›
-	CONSTANTS
-	⚬	voiture	 ›
-	⚬	camion1	 ›
-	⚬	camion2	 ›
-	⚬	camion3	 ›
-	⚬	N	 ›
-	⚬	taille	 ›
-	AXIOMS
-	⚬	axm1:	N = 20 not theorem ›
-	⚬	axm2:	N ∈ ℕ1 not theorem ›
-	⚬	axm3:	voiture ∈ TYPE_VEHICULE not theorem ›
-	⚬	axm4:	camion1 ∈ TYPE_VEHICULE not theorem ›
-	⚬	axm5:	camion2 ∈ TYPE_VEHICULE not theorem ›
-	⚬	axm6:	camion3 ∈ TYPE_VEHICULE not theorem ›
-	⚬	axm7:	TYPE_VEHICULE = {voiture, camion1, camion2, camion3} not theorem ›
-	⚬	axm8:	taille ∈ TYPE_VEHICULE → ℕ1   not theorem ›
-	⚬	axm9:	taille(voiture) = 1 not theorem ›
-	⚬	axm10:	taille(camion1) = 1 not theorem ›
-	⚬	axm11:	taille(camion2)= 2 not theorem ›
-	⚬	axm12:	taille(camion3)=3 not theorem ›
-	⚬	axm13:	∀ v · v ∈ TYPE_VEHICULE ⇒ taille(v) ∈ ℕ1 not theorem ›
+variables places_pont1 places_pont2 places_pont3 
 
-END
+invariants
+  @inv1 places_pont1 ∈ ℤ
+  @inv2 places_pont2 ∈ ℤ
+  @inv3 places_pont3 ∈ ℤ
 
-// machine M0 
-	MACHINE
-		M0 	›
-	SEES
-	⚬	 C0 
-	VARIABLES
-	⚬	places_pont1	 ›
-	⚬	places_pont2	 ›
-	⚬	places_pont3	 ›
-	INVARIANTS
-	⚬	inv1:	places_pont1 ∈ ℤ  not theorem ›
-	⚬	inv1b:	places_pont1 ≤ N not theorem ›
-	⚬	inv2:	places_pont2 ∈ ℤ not theorem ›
-	⚬	inv2b:	places_pont2 ≤ N not theorem ›
-	⚬	inv3:	places_pont3 ∈ ℤ  not theorem ›
-	⚬	inv3b:	places_pont3 ≤ N not theorem ›
-	EVENTS
-	⚬	INITIALISATION:	 not extended ordinary ›
-		THEN
-		⚬	act1:	places_pont1 ≔ 0 ›
-		⚬	act2:	places_pont2 ≔ 0 ›
-		⚬	act3:	places_pont3 ≔ 0 ›
-		END
+events
+  event INITIALISATION extends INITIALISATION 
+    then
+      @act1 places_pont1 ≔ 0
+      @act2 places_pont2 ≔ 0
+      @act3 places_pont3 ≔ 0
+  end
 
-	⚬	monter_pont1:	 not extended ordinary ›
-		ANY
-		⚬	v	 ›
-		WHERE
-		⚬	grd1:	v ∈ TYPE_VEHICULE  not theorem ›
-		⚬	grd2:	places_pont1 + taille(v) ≤ N not theorem ›
-		⚬	grd3:	places_pont1 ≥ 0 not theorem ›
-		THEN
-		⚬	act1:	places_pont1 ≔ places_pont1 + taille(v) ›
-		END
+  event monter_pont1
+    any v 
+    where
+      @grd1 v ∈ TYPE_VEHICULE
+      @grd2 places_pont1 + taille(v) ≤ N
+      @grd3 taille(v) > 0
+    then
+      @act1 places_pont1 ≔ places_pont1 + taille(v)
+  end
 
-	⚬	monter_pont2:	 not extended ordinary ›
-		ANY
-		⚬	v	 ›
-		WHERE
-		⚬	grd1:	v ∈ TYPE_VEHICULE not theorem ›
-		⚬	grd2:	places_pont1 = N not theorem ›
-		⚬	grd3:	places_pont2 + taille(v) ≤ N not theorem ›
-		⚬	grd4:	places_pont2 ≥ 0 not theorem ›
-		THEN
-		⚬	act1:	places_pont2 ≔ places_pont2 + taille(v) ›
-		END
+  event monter_pont2
+    any v 
+    where
+      @grd1 v ∈ TYPE_VEHICULE
+      @grd2 places_pont1 = N
+      @grd3 places_pont2 + taille(v) ≤ N
+      @grd4 taille(v) > 0
+    then
+      @act1 places_pont2 ≔ places_pont2 + taille(v)
+  end
 
-	⚬	monter_pont3:	 not extended ordinary ›
-		ANY
-		⚬	v	 ›
-		WHERE
-		⚬	grd1:	v ∈ TYPE_VEHICULE not theorem ›
-		⚬	grd2:	places_pont1 = N not theorem ›
-		⚬	grd3:	places_pont2 = N not theorem ›
-		⚬	grd4:	places_pont3 + taille(v) ≤ N not theorem ›
-		⚬	grd5:	places_pont3 ≥ 0 not theorem ›
-		THEN
-		⚬	act1:	places_pont3 ≔ places_pont3 + taille(v) ›
-		END
-END
+  event monter_pont3
+    any v 
+    where
+      @grd1 v ∈ TYPE_VEHICULE
+      @grd2 places_pont2 = N
+      @grd3 places_pont3 + taille(v) ≤ N
+      @grd4 taille(v) > 0
+    then
+      @act1 places_pont3 ≔ places_pont3 + taille(v)
+  end
+end
