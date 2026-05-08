@@ -1,0 +1,1131 @@
+
+// ============================================
+// FERRY BOAT - INFOB236 - Groupe 10
+// VERSION DOUBLE FILE
+// ============================================
+
+// Variables principales
+int N = 20;
+int pont1 = 0, pont2 = 0, pont3 = 0;
+int niveau = 0;
+boolean mcBouge = false;
+int placesMC = 0;
+boolean barrEntree = false;
+boolean barrSortie = false;
+boolean permission = false;
+
+// Position visuelle du monte-charge
+float mcY = 420;
+float mcYcible = 420;
+
+// ============================================
+// DOUBLE FILE
+// ============================================
+
+// File 1
+int[] file1 = new int[50];
+boolean[] resas1 = new boolean[50];
+int nbFile1 = 0;
+int tete1 = 0;
+
+// File 2
+int[] file2 = new int[50];
+boolean[] resas2 = new boolean[50];
+int nbFile2 = 0;
+int tete2 = 0;
+
+// File active
+int fileActive = 1;
+
+// Vehicules sur les ponts
+int[] vP1 = new int[20], vP2 = new int[20], vP3 = new int[20];
+int nP1 = 0, nP2 = 0, nP3 = 0;
+int[] vMC = new int[6];
+int nMC = 0;
+
+// Guidage
+int etape = 0;
+String msg = "Ajoutez des vehicules puis cliquez le bouton vert !";
+
+// Mode auto
+boolean autoMode = false;
+int autoTimer = 0;
+
+// Popup
+boolean popup = false;
+
+// ============================================
+void setup() {
+  size(1150, 620);
+
+  addVeh(1, true, 1);
+  addVeh(3, true, 1);
+  addVeh(4, false, 1);
+  addVeh(2, true, 1);
+
+  addVeh(1, true, 2);
+  addVeh(3, true, 2);
+  addVeh(4, true, 2);
+  addVeh(1, true, 2);
+}
+
+// ============================================
+// Utilitaires
+// ============================================
+
+void addVeh(int type, boolean resa, int fileNum) {
+
+  if (fileNum == 1) {
+    if (nbFile1 >= 50) return;
+    file1[nbFile1] = type;
+    resas1[nbFile1] = resa;
+    nbFile1++;
+  }
+  else {
+    if (nbFile2 >= 50) return;
+    file2[nbFile2] = type;
+    resas2[nbFile2] = resa;
+    nbFile2++;
+  }
+}
+
+int taille(int v) {
+  if (v == 3) return 2;
+  if (v == 4) return 3;
+  return 1;
+}
+
+String nomType(int v) {
+  String[] noms = {"", "Voiture", "Camion1", "Camion2", "Camion3"};
+  return noms[v];
+}
+
+String labelType(int v) {
+  String[] labels = {"", "V t1", "C1 t1", "C2 t2", "C3 t3"};
+  return labels[v];
+}
+
+// ============================================
+// FILE ACTIVE
+// ============================================
+
+int getTete() {
+  return (fileActive == 1) ? tete1 : tete2;
+}
+
+int getNbFile() {
+  return (fileActive == 1) ? nbFile1 : nbFile2;
+}
+
+int getVehiculeActuel() {
+  if (fileActive == 1) return file1[tete1];
+  return file2[tete2];
+}
+
+boolean getResaActuelle() {
+  if (fileActive == 1) return resas1[tete1];
+  return resas2[tete2];
+}
+
+void avancerFile() {
+  if (fileActive == 1) tete1++;
+  else tete2++;
+}
+
+int vehiculesRestants() {
+  return (nbFile1 - tete1) + (nbFile2 - tete2);
+}
+
+void changerFile() {
+
+  if (fileActive == 1) {
+    if (tete2 < nbFile2) fileActive = 2;
+  }
+  else {
+    if (tete1 < nbFile1) fileActive = 1;
+  }
+}
+
+// ============================================
+// Actions Event-B
+// ============================================
+
+void verifResa() {
+
+  if (etape != 0) {
+    msg = "! Cliquez le bouton vert !";
+    return;
+  }
+
+  if (vehiculesRestants() <= 0) {
+    msg = "Les deux files sont vides !";
+    autoMode = false;
+    return;
+  }
+
+  // Si file actuelle vide -> changer
+  if (getTete() >= getNbFile()) {
+    changerFile();
+  }
+
+  if (getTete() >= getNbFile()) {
+    msg = "Aucun véhicule disponible !";
+    return;
+  }
+
+  if (!getResaActuelle()) {
+    msg = "Resa INVALIDE -> " + nomType(getVehiculeActuel()) + " redirige vers voie laterale !";
+    avancerFile();
+    changerFile();
+    return;
+  }
+
+  permission = true;
+
+  msg = "File " + fileActive + " : Resa OK ("
+      + nomType(getVehiculeActuel())
+      + ") -> Ouvrez l entree";
+
+  etape = 1;
+}
+
+void ouvrirEntree() {
+
+  if (etape != 1) {
+    msg = "! Cliquez le bouton vert !";
+    return;
+  }
+
+  if (!mcBouge && niveau == 0 && !barrEntree && !barrSortie) {
+    barrEntree = true;
+    msg = "Entree ouverte -> Chargez le MC";
+    etape = 2;
+  }
+  else {
+    msg = "MC doit etre arrete au Pont 1 !";
+  }
+}
+
+void chargerMC() {
+
+  if (etape != 2) {
+    msg = "! Cliquez le bouton vert !";
+    return;
+  }
+
+  if (getTete() >= getNbFile()) {
+    msg = "File vide !";
+    return;
+  }
+
+  int v = getVehiculeActuel();
+  int t = taille(v);
+
+  if (!mcBouge && niveau == 0 && barrEntree && permission && placesMC + t <= 6) {
+
+    placesMC += t;
+
+    vMC[nMC] = v;
+    nMC++;
+
+    avancerFile();
+
+    permission = false;
+    barrEntree = false;
+
+    changerFile();
+
+    if (vehiculesRestants() > 0) {
+
+      if (getTete() < getNbFile()) {
+
+        if (getResaActuelle() && placesMC + taille(getVehiculeActuel()) <= 6) {
+
+          msg = "MC: " + placesMC + "/6 -> Verifiez le suivant";
+          etape = 0;
+          return;
+        }
+      }
+    }
+
+    msg = "MC charge (" + placesMC + "/6) -> Ouvrez la sortie";
+    etape = 3;
+  }
+  else {
+    msg = "Impossible de charger !";
+  }
+}
+
+void ouvrirSortie() {
+
+  if (etape != 3) {
+    msg = "! Cliquez le bouton vert !";
+    return;
+  }
+
+  if (mcBouge || barrSortie || barrEntree || placesMC == 0) {
+    msg = "Impossible d'ouvrir la sortie !";
+    return;
+  }
+
+  int tailleProchain = (nMC > 0) ? taille(vMC[0]) : 0;
+
+  // PONT 1
+  if (niveau == 0 && pont1 < N && tailleProchain <= (N - pont1)) {
+    barrSortie = true;
+    msg = "Sortie ouverte -> Montez sur Pont 1";
+    etape = 4;
+    return;
+  }
+
+  if (pont1 < N && niveau != 0) {
+    msg = "Pont 1 disponible -> Ramenez le MC au Pont 1";
+    etape = 7;
+    return;
+  }
+
+  // PONT 2
+  if (niveau == 1 && pont2 < N && tailleProchain <= (N - pont2)) {
+    barrSortie = true;
+    msg = "Sortie ouverte -> Montez sur Pont 2";
+    etape = 4;
+    return;
+  }
+
+  if (pont2 < N && niveau != 1) {
+    msg = "Direction Pont 2";
+    etape = 5;
+    return;
+  }
+
+  // PONT 3
+  if (niveau == 2 && pont3 < N && tailleProchain <= (N - pont3)) {
+    barrSortie = true;
+    msg = "Sortie ouverte -> Montez sur Pont 3";
+    etape = 4;
+    return;
+  }
+
+  if (pont3 < N && niveau != 2) {
+    msg = "Direction Pont 3";
+    etape = 6;
+    return;
+  }
+
+  msg = "Aucun pont disponible !";
+}
+
+void monterPont() {
+
+  if (etape != 4) {
+    msg = "! Cliquez le bouton vert !";
+    return;
+  }
+
+  if (nMC == 0) {
+    msg = "MC vide !";
+    return;
+  }
+
+  int v = vMC[0];
+  int t = taille(v);
+
+  boolean ok = false;
+
+  if (niveau == 0 && pont1 + t <= N) {
+    pont1 += t;
+    vP1[nP1] = v;
+    nP1++;
+    ok = true;
+  }
+  else if (niveau == 1 && pont2 + t <= N) {
+    pont2 += t;
+    vP2[nP2] = v;
+    nP2++;
+    ok = true;
+  }
+  else if (niveau == 2 && pont3 + t <= N) {
+    pont3 += t;
+    vP3[nP3] = v;
+    nP3++;
+    ok = true;
+  }
+
+  if (ok) {
+
+    placesMC -= t;
+
+    retirerMC();
+
+    if (nMC > 0) {
+
+      int pontActuel = (niveau == 0) ? pont1 : (niveau == 1) ? pont2 : pont3;
+
+      int tailleSuivant = taille(vMC[0]);
+
+      if (pontActuel + tailleSuivant <= N) {
+        msg = nomType(v) + " sur Pont " + (niveau + 1) + ". Continuez";
+        etape = 4;
+      }
+      else {
+        barrSortie = false;
+        msg = "Pont plein -> Ouvrez sortie";
+        etape = 3;
+      }
+    }
+    else {
+
+      barrSortie = false;
+
+      if (vehiculesRestants() > 0) {
+
+        if (niveau != 0) {
+          msg = "MC vide -> Retour Pont 1";
+          etape = 7;
+          versPont1();
+        }
+        else {
+          msg = "MC vide -> Pret nouveau vehicule";
+          etape = 0;
+        }
+      }
+      else {
+        msg = "Tous les vehicules ont embarque !";
+        autoMode = false;
+        etape = 0;
+      }
+    }
+  }
+}
+
+void versPont2() {
+
+  if (etape != 5) {
+    msg = "! Cliquez le bouton vert !";
+    return;
+  }
+
+  if (!mcBouge && niveau != 1 && placesMC > 0) {
+
+    mcBouge = true;
+    niveau = 1;
+    mcYcible = 280;
+
+    msg = "MC vers Pont 2";
+    etape = 4;
+  }
+}
+
+void versPont3() {
+
+  if (etape != 6) {
+    msg = "! Cliquez le bouton vert !";
+    return;
+  }
+
+  if (!mcBouge && niveau != 2 && placesMC > 0) {
+
+    mcBouge = true;
+    niveau = 2;
+    mcYcible = 140;
+
+    msg = "MC vers Pont 3";
+    etape = 4;
+  }
+}
+
+void versPont1() {
+
+  if (!mcBouge && niveau != 0) {
+
+    mcBouge = true;
+    niveau = 0;
+    mcYcible = 420;
+
+    msg = "MC vers Pont 1";
+
+    etape = (nMC > 0) ? 4 : 0;
+  }
+}
+
+void retirerMC() {
+  for (int i = 0; i < nMC - 1; i++) {
+    vMC[i] = vMC[i + 1];
+  }
+  nMC--;
+}
+
+void reset() {
+
+  pont1 = 0;
+  pont2 = 0;
+  pont3 = 0;
+
+  niveau = 0;
+  mcBouge = false;
+  placesMC = 0;
+
+  barrEntree = false;
+  barrSortie = false;
+  permission = false;
+
+  mcY = 420;
+  mcYcible = 420;
+
+  nP1 = 0;
+  nP2 = 0;
+  nP3 = 0;
+  nMC = 0;
+
+  tete1 = 0;
+  tete2 = 0;
+
+  nbFile1 = 0;
+  nbFile2 = 0;
+
+  fileActive = 1;
+
+  etape = 0;
+  autoMode = false;
+
+  msg = "Reset effectue !";
+}
+
+// ============================================
+// DRAW
+// ============================================
+
+void draw() {
+
+  background(25, 50, 90);
+
+  mcY += (mcYcible - mcY) * 0.06;
+
+  if (abs(mcY - mcYcible) < 1 && mcBouge) {
+
+    mcBouge = false;
+
+    if (nMC > 0) {
+      barrSortie = true;
+      msg = "MC arrive au Pont " + (niveau + 1);
+      etape = 4;
+    }
+    else if (niveau == 0) {
+      msg = "MC pret au Pont 1";
+      etape = 0;
+    }
+  }
+
+  if (autoMode) {
+    autoTimer++;
+
+    if (autoTimer > 45 && !mcBouge && !popup) {
+      autoTimer = 0;
+      faireEtape();
+    }
+  }
+
+  dessinerMer();
+  dessinerBateau();
+  dessinerFiles();
+  dessinerMC();
+  dessinerBoutons();
+  dessinerInfos();
+
+  if (popup) dessinerPopup();
+}
+
+// ============================================
+
+String consigne() {
+
+  String[] c = {
+    "Verifiez la reservation",
+    "Ouvrez entree",
+    "Chargez le MC",
+    "Ouvrez sortie",
+    "Montez vehicule",
+    "Vers Pont 2",
+    "Vers Pont 3",
+    "Retour Pont 1"
+  };
+
+  return c[etape];
+}
+
+void faireEtape() {
+
+  switch(etape) {
+
+  case 0:
+    verifResa();
+    break;
+
+  case 1:
+    ouvrirEntree();
+    break;
+
+  case 2:
+    chargerMC();
+    break;
+
+  case 3:
+    ouvrirSortie();
+    break;
+
+  case 4:
+    monterPont();
+    break;
+
+  case 5:
+    versPont2();
+    break;
+
+  case 6:
+    versPont3();
+    break;
+
+  case 7:
+    versPont1();
+    break;
+  }
+}
+
+// ============================================
+// MER
+// ============================================
+
+void dessinerMer() {
+
+  fill(15, 70, 150);
+  noStroke();
+
+  rect(0, 510, width, 110);
+
+  stroke(80, 160, 255, 80);
+  strokeWeight(2);
+
+  for (int i = 0; i < 3; i++) {
+
+    line(
+      0,
+      525 + i * 15 + sin(frameCount * 0.03 + i) * 4,
+      width,
+      525 + i * 15 + sin(frameCount * 0.03 + i + 1) * 4
+      );
+  }
+}
+
+// ============================================
+// BATEAU
+// ============================================
+
+
+void dessinerBateau() {
+
+  // COQUE
+  fill(55, 60, 75);
+  stroke(35, 40, 55);
+  strokeWeight(2);
+
+  beginShape();
+  vertex(420, 510);
+  vertex(980, 510);
+  vertex(995, 492);
+  vertex(400, 492);
+  endShape(CLOSE);
+
+  // =========================
+  // PONT 1
+  // =========================
+  fill(95, 100, 115);
+  stroke(75, 80, 95);
+  strokeWeight(1);
+  rect(500, 432, 620, 58);
+
+  // =========================
+  // PONT 2
+  // =========================
+  fill(105, 110, 125);
+  rect(470, 295, 620, 58);
+
+  // =========================
+  // PONT 3
+  // =========================
+  fill(115, 120, 135);
+  rect(490, 158, 560, 58);
+
+  // =========================
+  // CABINE
+  // =========================
+  fill(175, 180, 195);
+  noStroke();
+  rect(900, 90, 110, 78);
+
+  fill(140, 195, 255);
+  rect(910, 102, 20, 14, 3);
+  rect(940, 102, 20, 14, 3);
+  rect(970, 102, 20, 14, 3);
+
+  // =========================
+  // CHEMINÉE
+  // =========================
+  fill(45, 45, 55);
+  rect(950, 38, 20, 58);
+
+  fill(190, 190, 190, 110);
+  noStroke();
+
+  ellipse(960, 30 + sin(frameCount * 0.05) * 2, 18, 18);
+  ellipse(960, 14 + sin(frameCount * 0.05) * 2, 26, 26);
+
+  // =========================
+  // DRAPEAU
+  // =========================
+  stroke(75, 75, 75);
+  strokeWeight(3);
+
+  line(850, 158, 850, 55);
+
+  fill(195, 45, 45);
+  noStroke();
+
+  triangle(850, 55, 876, 68, 850, 81);
+
+  // =========================
+  // TEXTES
+  // =========================
+  textAlign(LEFT);
+  textSize(12);
+  fill(255, 215, 90);
+
+  text("PONT 1 [" + pont1 + "/" + N + "]", 520, 470);
+  text("PONT 2 [" + pont2 + "/" + N + "]", 490, 333);
+  text("PONT 3 [" + pont3 + "/" + N + "]", 510, 196);
+
+  // =========================
+  // VEHICULES SUR PONTS
+  // =========================
+  for (int i = 0; i < nP1; i++) {
+    dessinerVeh(vP1[i], 520 + i * 34, 438);
+  }
+
+  for (int i = 0; i < nP2; i++) {
+    dessinerVeh(vP2[i], 490 + i * 34, 301);
+  }
+
+  for (int i = 0; i < nP3; i++) {
+    dessinerVeh(vP3[i], 510 + i * 34, 164);
+  }
+}
+
+
+// ============================================
+// VEHICULE
+// ============================================
+
+void dessinerVeh(int type, float x, float y) {
+
+  noStroke();
+
+  if (type == 1) {
+
+    fill(65, 125, 215);
+    rect(x, y + 5, 24, 12, 3);
+
+    fill(145, 195, 255);
+    rect(x + 4, y + 3, 14, 8, 2);
+
+    fill(15);
+    ellipse(x + 5, y + 17, 7, 7);
+    ellipse(x + 19, y + 17, 7, 7);
+  }
+  else if (type == 2) {
+
+    fill(45, 155, 75);
+    rect(x, y + 4, 26, 14, 2);
+
+    fill(145, 250, 175);
+    rect(x + 2, y + 2, 10, 8, 2);
+
+    fill(15);
+    ellipse(x + 6, y + 18, 7, 7);
+    ellipse(x + 20, y + 18, 7, 7);
+  }
+  else if (type == 3) {
+
+    fill(215, 125, 35);
+    rect(x, y + 3, 40, 15, 2);
+
+    fill(250, 195, 145);
+    rect(x + 2, y + 1, 12, 9, 2);
+
+    fill(15);
+    ellipse(x + 7, y + 18, 8, 8);
+    ellipse(x + 32, y + 18, 8, 8);
+  }
+  else if (type == 4) {
+
+    fill(195, 55, 55);
+    rect(x, y + 2, 54, 16, 2);
+
+    fill(250, 145, 145);
+    rect(x + 2, y, 14, 10, 2);
+
+    fill(15);
+    ellipse(x + 8, y + 18, 8, 8);
+    ellipse(x + 30, y + 18, 8, 8);
+    ellipse(x + 46, y + 18, 8, 8);
+  }
+
+  fill(255, 215, 0);
+  textAlign(CENTER);
+  textSize(8);
+
+  text(labelType(type), x + taille(type) * 12, y - 1);
+}
+
+// ============================================
+// MC
+// ============================================
+
+void dessinerMC() {
+
+  stroke(110, 110, 130);
+  strokeWeight(5);
+
+  line(287, 148, 287, 492);
+
+  fill(mcBouge ? color(255, 195, 0) : color(55, 175, 55));
+
+  // MC déplacé plus à droite
+  rect(250, mcY, 74, 58, 5);
+
+  int col = 0;
+  int row = 0;
+
+  for (int i = 0; i < nMC; i++) {
+
+    dessinerVeh(vMC[i], 253 + col * 34, mcY + 4 + row * 24);
+
+    col++;
+
+    if (col >= 2) {
+      col = 0;
+      row++;
+    }
+  }
+
+  fill(255);
+  textAlign(CENTER);
+  textSize(10);
+
+  text("MC " + placesMC + "/6", 287, mcY + 53);
+}
+
+// ============================================
+// DOUBLE FILE
+// ============================================
+
+void dessinerFiles() {
+
+  // Les files sont maintenant plus à gauche
+  dessinerFileSimple(1, 40);
+  dessinerFileSimple(2, 140);
+}
+
+void dessinerFileSimple(int num, int posX) {
+
+  fill(25, 25, 48);
+  noStroke();
+
+  rect(posX, 132, 90, 370, 8);
+
+  fill(fileActive == num ? color(255, 215, 0) : color(180));
+
+  textAlign(CENTER);
+  textSize(10);
+
+  text("FILE " + num, posX + 45, 152);
+
+  int tete = (num == 1) ? tete1 : tete2;
+  int nb = (num == 1) ? nbFile1 : nbFile2;
+
+  text((nb - tete) + " veh.", posX + 45, 166);
+
+  int show = 0;
+
+  for (int i = tete; i < nb && show < 8; i++) {
+
+    float fy = 175 + show * 40;
+
+    boolean resa = (num == 1) ? resas1[i] : resas2[i];
+    int veh = (num == 1) ? file1[i] : file2[i];
+
+    fill(resa ? color(25, 95, 25) : color(95, 25, 25));
+
+    rect(posX + 5, fy, 78, 32, 5);
+
+    dessinerVeh(veh, posX + 8, fy + 6);
+
+    fill(255);
+    textSize(9);
+    textAlign(RIGHT);
+
+    text(resa ? "OK" : "KO", posX + 80, fy + 20);
+
+    show++;
+  }
+}
+
+// ============================================
+// BOUTONS
+// ============================================
+
+void dessinerBoutons() {
+
+  String[] noms = {
+    "1.Verif",
+    "2.Entree",
+    "3.Charger",
+    "4.Sortie",
+    "5.Monter",
+    "P2",
+    "P3",
+    "P1"
+  };
+
+  for (int i = 0; i < 8; i++) {
+
+    float bx = 10 + (i % 5) * 115;
+    float by = (i < 5) ? height - 88 : height - 44;
+
+    fill(i == etape ? color(45, 200, 45) : color(45, 45, 115));
+
+    rect(bx, by, 108, 36, 6);
+
+    fill(255);
+    textAlign(CENTER);
+
+    text(noms[i], bx + 54, by + 22);
+  }
+
+  // Ajouter
+  fill(65, 25, 125);
+  rect(width - 132, height - 140, 125, 36, 6);
+
+  fill(255);
+  text("Ajouter", width - 70, height - 118);
+
+  // Auto
+  fill(autoMode ? color(255, 140, 0) : color(0, 120, 60));
+  rect(width - 132, height - 92, 125, 36, 6);
+
+  fill(255);
+  text(autoMode ? "PAUSE" : "AUTO", width - 70, height - 70);
+
+  // Reset
+  fill(140, 20, 20);
+  rect(width - 132, height - 44, 125, 36, 6);
+
+  fill(255);
+  text("RESET", width - 70, height - 22);
+}
+
+// ============================================
+// INFOS
+// ============================================
+
+void dessinerInfos() {
+
+  fill(18, 18, 38, 220);
+  rect(0, 0, width, 24);
+
+  fill(255);
+  textAlign(LEFT);
+  textSize(12);
+
+  text("> " + msg, 8, 16);
+
+  fill(28, 28, 52, 210);
+  rect(0, 24, width, 24);
+
+  fill(255, 215, 90);
+
+  text((autoMode ? "AUTO : " : "-> ") + consigne(), 8, 40);
+
+  textAlign(RIGHT);
+
+  text(
+    "MC:" + placesMC + "/6"
+    + "  P1:" + pont1
+    + "  P2:" + pont2
+    + "  P3:" + pont3
+    + "  F1:" + (nbFile1 - tete1)
+    + "  F2:" + (nbFile2 - tete2),
+    width - 8,
+    40
+    );
+}
+
+// ============================================
+// POPUP
+// ============================================
+
+void dessinerPopup() {
+
+  fill(0, 0, 0, 155);
+  rect(0, 0, width, height);
+
+  float px = width / 2 - 210;
+  float py = height / 2 - 170;
+
+  fill(28, 28, 52);
+  rect(px, py, 420, 340, 10);
+
+  fill(255, 215, 90);
+  textAlign(CENTER);
+  textSize(15);
+
+  text("Ajouter un vehicule", width / 2, py + 28);
+
+  String[] noms2 = {
+    "Voiture",
+    "Camion1",
+    "Camion2",
+    "Camion3"
+  };
+
+  for (int i = 0; i < 4; i++) {
+
+    float tx = px + 15 + (i % 2) * 200;
+    float ty = py + 60 + (i / 2) * 115;
+
+    fill(70, 70, 160);
+    rect(tx, ty, 185, 100, 8);
+
+    dessinerVeh(i + 1, tx + 12, ty + 32);
+
+    fill(255);
+    textAlign(LEFT);
+
+    text(noms2[i], tx + 72, ty + 48);
+    text("Clic = File 1", tx + 72, ty + 68);
+    text("Shift = File 2", tx + 72, ty + 84);
+  }
+}
+
+// ============================================
+// CLICS
+// ============================================
+
+void mousePressed() {
+
+  if (popup) {
+
+    float px = width / 2 - 210;
+    float py = height / 2 - 170;
+
+    for (int i = 0; i < 4; i++) {
+
+      float tx = px + 15 + (i % 2) * 200;
+      float ty = py + 60 + (i / 2) * 115;
+
+      if (mouseX > tx && mouseX < tx + 185
+        && mouseY > ty && mouseY < ty + 100) {
+
+        int fileChoisie = (keyPressed && keyCode == SHIFT) ? 2 : 1;
+
+        addVeh(i + 1, true, fileChoisie);
+
+        msg = nomType(i + 1) + " ajoute dans File " + fileChoisie;
+
+        popup = false;
+        return;
+      }
+    }
+
+    return;
+  }
+
+  for (int i = 0; i < 8; i++) {
+
+    float bx = 10 + (i % 5) * 115;
+    float by = (i < 5) ? height - 88 : height - 44;
+
+    if (mouseX > bx && mouseX < bx + 108
+      && mouseY > by && mouseY < by + 36) {
+
+      autoMode = false;
+      faireEtapeNum(i);
+      return;
+    }
+  }
+
+  // Ajouter
+  if (mouseX > width - 132 && mouseX < width - 7
+    && mouseY > height - 140 && mouseY < height - 104) {
+
+    popup = true;
+    return;
+  }
+
+  // Auto
+  if (mouseX > width - 132 && mouseX < width - 7
+    && mouseY > height - 92 && mouseY < height - 56) {
+
+    autoMode = !autoMode;
+
+    msg = autoMode ? "Mode auto active" : "Auto pause";
+
+    return;
+  }
+
+  // Reset
+  if (mouseX > width - 132 && mouseX < width - 7
+    && mouseY > height - 44 && mouseY < height - 8) {
+
+    reset();
+    return;
+  }
+}
+
+void faireEtapeNum(int i) {
+
+  switch(i) {
+
+  case 0:
+    verifResa();
+    break;
+
+  case 1:
+    ouvrirEntree();
+    break;
+
+  case 2:
+    chargerMC();
+    break;
+
+  case 3:
+    ouvrirSortie();
+    break;
+
+  case 4:
+    monterPont();
+    break;
+
+  case 5:
+    versPont2();
+    break;
+
+  case 6:
+    versPont3();
+    break;
+
+  case 7:
+    versPont1();
+    break;
+  }
+}
+
+
