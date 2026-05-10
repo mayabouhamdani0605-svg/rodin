@@ -1,4 +1,3 @@
-
 // ============================================
 // FERRY BOAT - INFOB236 - Groupe 10
 // VERSION DOUBLE FILE
@@ -106,47 +105,6 @@ String labelType(int v) {
 }
 
 // ============================================
-// FILE ACTIVE
-// ============================================
-
-int getTete() {
-  return (fileActive == 1) ? tete1 : tete2;
-}
-
-int getNbFile() {
-  return (fileActive == 1) ? nbFile1 : nbFile2;
-}
-
-int getVehiculeActuel() {
-  if (fileActive == 1) return file1[tete1];
-  return file2[tete2];
-}
-
-boolean getResaActuelle() {
-  if (fileActive == 1) return resas1[tete1];
-  return resas2[tete2];
-}
-
-void avancerFile() {
-  if (fileActive == 1) tete1++;
-  else tete2++;
-}
-
-int vehiculesRestants() {
-  return (nbFile1 - tete1) + (nbFile2 - tete2);
-}
-
-void changerFile() {
-
-  if (fileActive == 1) {
-    if (tete2 < nbFile2) fileActive = 2;
-  }
-  else {
-    if (tete1 < nbFile1) fileActive = 1;
-  }
-}
-
-// ============================================
 // Actions Event-B
 // ============================================
 
@@ -157,36 +115,81 @@ void verifResa() {
     return;
   }
 
-  if (vehiculesRestants() <= 0) {
+  // les deux files sont vides
+  if (tete1 >= nbFile1 && tete2 >= nbFile2) {
     msg = "Les deux files sont vides !";
     autoMode = false;
     return;
   }
 
-  // Si file actuelle vide -> changer
-  if (getTete() >= getNbFile()) {
-    changerFile();
+  // si la file active est vide on essaye l'autre
+  if (fileActive == 1 && tete1 >= nbFile1) {
+    fileActive = 2;
   }
 
-  if (getTete() >= getNbFile()) {
-    msg = "Aucun véhicule disponible !";
-    return;
+  if (fileActive == 2 && tete2 >= nbFile2) {
+    fileActive = 1;
   }
 
-  if (!getResaActuelle()) {
-    msg = "Resa INVALIDE -> " + nomType(getVehiculeActuel()) + " redirige vers voie laterale !";
-    avancerFile();
-    changerFile();
-    return;
+  // ======================
+  // FILE 1
+  // ======================
+  if (fileActive == 1) {
+
+    if (tete1 >= nbFile1) {
+      msg = "File 1 vide !";
+      return;
+    }
+
+    if (!resas1[tete1]) {
+
+      msg = "Resa INVALIDE -> " + nomType(file1[tete1]) + " redirige vers voie laterale !";
+
+      tete1++;
+
+      if (tete2 < nbFile2) {
+        fileActive = 2;
+      }
+
+      return;
+    }
+
+    permission = true;
+
+    msg = "File 1 : Resa OK (" + nomType(file1[tete1]) + ") -> Ouvrez l entree";
+
+    etape = 1;
   }
 
-  permission = true;
+  // ======================
+  // FILE 2
+  // ======================
+  else {
 
-  msg = "File " + fileActive + " : Resa OK ("
-      + nomType(getVehiculeActuel())
-      + ") -> Ouvrez l entree";
+    if (tete2 >= nbFile2) {
+      msg = "File 2 vide !";
+      return;
+    }
 
-  etape = 1;
+    if (!resas2[tete2]) {
+
+      msg = "Resa INVALIDE -> " + nomType(file2[tete2]) + " redirige vers voie laterale !";
+
+      tete2++;
+
+      if (tete1 < nbFile1) {
+        fileActive = 1;
+      }
+
+      return;
+    }
+
+    permission = true;
+
+    msg = "File 2 : Resa OK (" + nomType(file2[tete2]) + ") -> Ouvrez l entree";
+
+    etape = 1;
+  }
 }
 
 void ouvrirEntree() {
@@ -213,46 +216,135 @@ void chargerMC() {
     return;
   }
 
-  if (getTete() >= getNbFile()) {
-    msg = "File vide !";
-    return;
-  }
+  int v = 0;
+  int t = 0;
 
-  int v = getVehiculeActuel();
-  int t = taille(v);
+  // ======================
+  // FILE 1
+  // ======================
+  if (fileActive == 1) {
 
-  if (!mcBouge && niveau == 0 && barrEntree && permission && placesMC + t <= 6) {
-
-    placesMC += t;
-
-    vMC[nMC] = v;
-    nMC++;
-
-    avancerFile();
-
-    permission = false;
-    barrEntree = false;
-
-    changerFile();
-
-    if (vehiculesRestants() > 0) {
-
-      if (getTete() < getNbFile()) {
-
-        if (getResaActuelle() && placesMC + taille(getVehiculeActuel()) <= 6) {
-
-          msg = "MC: " + placesMC + "/6 -> Verifiez le suivant";
-          etape = 0;
-          return;
-        }
-      }
+    if (tete1 >= nbFile1) {
+      msg = "File 1 vide !";
+      return;
     }
 
-    msg = "MC charge (" + placesMC + "/6) -> Ouvrez la sortie";
-    etape = 3;
+    v = file1[tete1];
+    t = taille(v);
+
+    if (!mcBouge && niveau == 0 && barrEntree && permission && placesMC + t <= 6) {
+
+      placesMC += t;
+
+      vMC[nMC] = v;
+      nMC++;
+
+      tete1++;
+
+      permission = false;
+      barrEntree = false;
+
+      if (tete2 < nbFile2) {
+        fileActive = 2;
+      }
+
+      // on regarde si on peut encore charger un autre véhicule
+      if ((nbFile1 - tete1) + (nbFile2 - tete2) > 0) {
+
+        if (fileActive == 1) {
+
+          if (tete1 < nbFile1) {
+
+            if (resas1[tete1] && placesMC + taille(file1[tete1]) <= 6) {
+              msg = "MC: " + placesMC + "/6 -> Verifiez le suivant";
+              etape = 0;
+              return;
+            }
+          }
+        }
+        else {
+
+          if (tete2 < nbFile2) {
+
+            if (resas2[tete2] && placesMC + taille(file2[tete2]) <= 6) {
+              msg = "MC: " + placesMC + "/6 -> Verifiez le suivant";
+              etape = 0;
+              return;
+            }
+          }
+        }
+      }
+
+      msg = "MC charge (" + placesMC + "/6) -> Ouvrez la sortie";
+      etape = 3;
+    }
+    else {
+      msg = "Impossible de charger !";
+    }
   }
+
+  // ======================
+  // FILE 2
+  // ======================
   else {
-    msg = "Impossible de charger !";
+
+    if (tete2 >= nbFile2) {
+      msg = "File 2 vide !";
+      return;
+    }
+
+    v = file2[tete2];
+    t = taille(v);
+
+    if (!mcBouge && niveau == 0 && barrEntree && permission && placesMC + t <= 6) {
+
+      placesMC += t;
+
+      vMC[nMC] = v;
+      nMC++;
+
+      tete2++;
+
+      permission = false;
+      barrEntree = false;
+
+      if (tete1 < nbFile1) {
+        fileActive = 1;
+      }
+
+      // on regarde si on peut encore charger un autre véhicule
+      if ((nbFile1 - tete1) + (nbFile2 - tete2) > 0) {
+
+        if (fileActive == 1) {
+
+          if (tete1 < nbFile1) {
+
+            if (resas1[tete1] && placesMC + taille(file1[tete1]) <= 6) {
+              msg = "MC: " + placesMC + "/6 -> Verifiez le suivant";
+              etape = 0;
+              return;
+            }
+          }
+        }
+        else {
+
+          if (tete2 < nbFile2) {
+
+            if (resas2[tete2] && placesMC + taille(file2[tete2]) <= 6) {
+              msg = "MC: " + placesMC + "/6 -> Verifiez le suivant";
+              etape = 0;
+              return;
+            }
+          }
+        }
+      }
+
+      msg = "MC charge (" + placesMC + "/6) -> Ouvrez la sortie";
+      etape = 3;
+    }
+    else {
+      msg = "Impossible de charger !";
+    }
   }
 }
 
@@ -377,7 +469,7 @@ void monterPont() {
 
       barrSortie = false;
 
-      if (vehiculesRestants() > 0) {
+      if ((nbFile1 - tete1) + (nbFile2 - tete2) > 0) {
 
         if (niveau != 0) {
           msg = "MC vide -> Retour Pont 1";
@@ -620,7 +712,6 @@ void dessinerMer() {
 // BATEAU
 // ============================================
 
-
 void dessinerBateau() {
 
   // COQUE
@@ -629,10 +720,10 @@ void dessinerBateau() {
   strokeWeight(2);
 
   beginShape();
-  vertex(420, 510);
-  vertex(980, 510);
-  vertex(995, 492);
-  vertex(400, 492);
+  vertex(400, 510);
+  vertex(1000, 510);
+  vertex(1030, 492);
+  vertex(380, 492);
   endShape(CLOSE);
 
   // =========================
@@ -641,43 +732,43 @@ void dessinerBateau() {
   fill(95, 100, 115);
   stroke(75, 80, 95);
   strokeWeight(1);
-  rect(500, 432, 620, 58);
+  rect(430, 432, 570, 58);
 
   // =========================
   // PONT 2
   // =========================
   fill(105, 110, 125);
-  rect(470, 295, 620, 58);
+  rect(430, 295, 570, 58);
 
   // =========================
   // PONT 3
   // =========================
   fill(115, 120, 135);
-  rect(490, 158, 560, 58);
+  rect(430, 158, 540, 58);
 
   // =========================
   // CABINE
   // =========================
   fill(175, 180, 195);
   noStroke();
-  rect(900, 90, 110, 78);
+  rect(820, 90, 110, 78);
 
   fill(140, 195, 255);
-  rect(910, 102, 20, 14, 3);
-  rect(940, 102, 20, 14, 3);
-  rect(970, 102, 20, 14, 3);
+  rect(830, 102, 20, 14, 3);
+  rect(860, 102, 20, 14, 3);
+  rect(890, 102, 20, 14, 3);
 
   // =========================
   // CHEMINÉE
   // =========================
   fill(45, 45, 55);
-  rect(950, 38, 20, 58);
+  rect(870, 38, 20, 58);
 
   fill(190, 190, 190, 110);
   noStroke();
 
-  ellipse(960, 30 + sin(frameCount * 0.05) * 2, 18, 18);
-  ellipse(960, 14 + sin(frameCount * 0.05) * 2, 26, 26);
+  ellipse(880, 30 + sin(frameCount * 0.05) * 2, 18, 18);
+  ellipse(880, 14 + sin(frameCount * 0.05) * 2, 26, 26);
 
   // =========================
   // DRAPEAU
@@ -685,12 +776,12 @@ void dessinerBateau() {
   stroke(75, 75, 75);
   strokeWeight(3);
 
-  line(850, 158, 850, 55);
+  line(770, 158, 770, 55);
 
   fill(195, 45, 45);
   noStroke();
 
-  triangle(850, 55, 876, 68, 850, 81);
+  triangle(770, 55, 796, 68, 770, 81);
 
   // =========================
   // TEXTES
@@ -699,26 +790,25 @@ void dessinerBateau() {
   textSize(12);
   fill(255, 215, 90);
 
-  text("PONT 1 [" + pont1 + "/" + N + "]", 520, 470);
-  text("PONT 2 [" + pont2 + "/" + N + "]", 490, 333);
-  text("PONT 3 [" + pont3 + "/" + N + "]", 510, 196);
+  text("PONT 1 [" + pont1 + "/" + N + "]", 450, 470);
+  text("PONT 2 [" + pont2 + "/" + N + "]", 430, 333);
+  text("PONT 3 [" + pont3 + "/" + N + "]", 450, 196);
 
   // =========================
   // VEHICULES SUR PONTS
   // =========================
   for (int i = 0; i < nP1; i++) {
-    dessinerVeh(vP1[i], 520 + i * 34, 438);
+    dessinerVeh(vP1[i], 450 + i * 34, 438);
   }
 
   for (int i = 0; i < nP2; i++) {
-    dessinerVeh(vP2[i], 490 + i * 34, 301);
+    dessinerVeh(vP2[i], 430 + i * 34, 301);
   }
 
   for (int i = 0; i < nP3; i++) {
-    dessinerVeh(vP3[i], 510 + i * 34, 164);
+    dessinerVeh(vP3[i], 450 + i * 34, 164);
   }
 }
-
 
 // ============================================
 // VEHICULE
@@ -1127,5 +1217,3 @@ void faireEtapeNum(int i) {
     break;
   }
 }
-
-
