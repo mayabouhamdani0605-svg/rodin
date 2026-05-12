@@ -1,6 +1,5 @@
 // ============================================
-// FERRY BOAT - INFOB236 - Groupe 10
-// VERSION DOUBLE FILE
+// FERRY BOAT - INFOB236 - Groupe 4 - AA 25-26
 // ============================================
 
 // Variables principales
@@ -17,9 +16,7 @@ boolean permission = false;
 float mcY = 420;
 float mcYcible = 420;
 
-// ============================================
-// DOUBLE FILE
-// ============================================
+
 
 // File 1
 int[] file1 = new int[50];
@@ -131,9 +128,7 @@ void verifResa() {
     fileActive = 1;
   }
 
-  // ======================
-  // FILE 1
-  // ======================
+
   if (fileActive == 1) {
 
     if (tete1 >= nbFile1) {
@@ -161,9 +156,7 @@ void verifResa() {
     etape = 1;
   }
 
-  // ======================
-  // FILE 2
-  // ======================
+
   else {
 
     if (tete2 >= nbFile2) {
@@ -219,9 +212,7 @@ void chargerMC() {
   int v = 0;
   int t = 0;
 
-  // ======================
-  // FILE 1
-  // ======================
+
   if (fileActive == 1) {
 
     if (tete1 >= nbFile1) {
@@ -283,9 +274,7 @@ void chargerMC() {
     }
   }
 
-  // ======================
-  // FILE 2
-  // ======================
+
   else {
 
     if (tete2 >= nbFile2) {
@@ -913,9 +902,7 @@ void dessinerMC() {
   text("MC " + placesMC + "/6", 287, mcY + 53);
 }
 
-// ============================================
-// DOUBLE FILE
-// ============================================
+
 
 void dessinerFiles() {
 
